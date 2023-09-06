@@ -1833,7 +1833,7 @@ local function DelayFeed(self, pl)
 		pl:SendLua("InitTeams({"..table.concat(TEAMS_PLAYING, ",").."}) OVERTIME="..tostring(OVERTIME).." "..(pl:Team() == TEAM_SPECTATOR and "MakepTeamSelect()" or "MakepClasses()"))
 		if self.FlagEntity then
 			for i in pairs(team.GetAllTeams()) do
-				if i < 9 and 0 < i then
+				if i < 9 and 0 < i and team.GetFlagPoint(i) then
 					umsg.Start("RecFlagInfo", pl)
 						umsg.Short(i)
 						umsg.Vector(team.GetFlagPoint(i))

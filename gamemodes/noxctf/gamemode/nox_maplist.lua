@@ -19,6 +19,7 @@ function GM:GetMapTable(name)
 	end
 end
 
+-- TODO: Read from a config
 GM:AddMap("noxctf_4towers", 				"4-Towers")
 GM:AddMap("gm_build_fortwars_ctf_4towers3", "4-Towers V3")
 GM:AddMap("gm_build_noxctf_battlefield", 	"Battlefield")
