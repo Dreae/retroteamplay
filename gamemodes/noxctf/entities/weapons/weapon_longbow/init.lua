@@ -120,7 +120,7 @@ function SWEP:Think()
 		self.Fidget = true
 		self.Drawing = nil
 		self.Lower = nil
-		self.FullPower = CurTime() + 1
+		self.FullPower = CurTime() + 0.5
 		self:SendWeaponAnim(ACT_VM_FIDGET)
 		self.Owner:EmitSound("nox/bow_start0"..math.random(1,2)..".ogg")
 		self:SetWeaponHoldType("smg")

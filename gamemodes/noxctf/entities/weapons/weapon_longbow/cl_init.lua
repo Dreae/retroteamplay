@@ -14,9 +14,6 @@ SWEP.NextAttack = 0
 killicon.Add(GetSWEPClassName(SWEP.Folder), "spellicons/archer.png", color_white)
 killicon.Add("projectile_arrow", "spellicons/archer.png", color_white)
 
-SWEP.DrawWorldModel = function() end
-SWEP.DrawWorldModelTranslucent = SWEP.DrawWorldModel
-
 function SWEP:DrawWeaponSelection(x, y, wide, tall, alpha)
 	draw.SimpleText(self.PrintName, "teamplay", x + wide * 0.5, y + tall * 0.5, color_white, TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER)
 end
@@ -44,7 +41,7 @@ function SWEP:Think()
 		self.Fidget = true
 		self.Drawing = nil
 		self.Lower = nil
-		self.FullPower = CurTime() + 1
+		self.FullPower = CurTime() + 0.5
 		self:SendWeaponAnim(ACT_VM_FIDGET)
 	elseif self.Lower and self.Lower <= CurTime() then
 		self.Lower = nil
@@ -96,7 +93,4 @@ function SWEP:DrawHUD()
 		surface.SetDrawColor(brit, brit, brit, 255)
 	end
 	surface.DrawOutlinedRect(x - wid * 0.5, y, wid, hei)
-end
-
-function SWEP:DrawWorldModel()
 end
