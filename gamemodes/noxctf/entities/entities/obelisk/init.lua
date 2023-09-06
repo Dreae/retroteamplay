@@ -13,7 +13,7 @@ ENT.Sappers = 0
 
 function ENT:Initialize()
 	self:SetModel(rockmodels[math.random(1, #rockmodels)])
-	self:SetPos(self:GetPos() + Vector(0, 0, -8))
+	self:SetPos(self:GetPos() + Vector(0, 0, 8))
 	self:PhysicsInitBox(Vector(-14, -14, -48), Vector(14, 14, 48))
 	self:SetCollisionBounds(Vector(-14, -14, -48), Vector(14, 14, 48))
 
