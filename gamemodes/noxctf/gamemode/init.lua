@@ -131,18 +131,19 @@ GM.TeamLocks = {}
 
 function GM:IsOnRightSide(ent, teamid)
 	if teamid then
-		local teaminfo=team.TeamInfo[teamid]
-		if teaminfo then
-			local flagpoint=teaminfo.FlagPoint
-			if flagpoint then
-				local desireddistance = ent:NearestPoint(flagpoint):Distance(flagpoint)
-				for _, teamid2 in pairs(TEAMS_PLAYING) do
-					if ent:NearestPoint(flagpoint):Distance(team.TeamInfo[teamid2].FlagPoint) < desireddistance then
-						return false
-					end
-				end
-			end
-		end
+		-- TODO: This
+		-- local teaminfo = team.TeamInfo[teamid]
+		-- if teaminfo then
+		-- 	local flagpoint = teaminfo.FlagPoint
+		-- 	if flagpoint then
+		-- 		local desireddistance = ent:NearestPoint(flagpoint):Distance(flagpoint)
+		-- 		for _, teamid2 in pairs(TEAMS_PLAYING) do
+		-- 			if ent:NearestPoint(flagpoint):Distance(team.TeamInfo[teamid2].FlagPoint) < desireddistance then
+		-- 				return false
+		-- 			end
+		-- 		end
+		-- 	end
+		-- end
 	end
 
 	return true
@@ -422,7 +423,7 @@ function GM:InitPostEntity()
 				if ent:IsValid() then
 					ent:SetPos(Vector(tonumber(expstuff[2]), tonumber(expstuff[3]), tonumber(expstuff[4])))
 					for i=5, #expstuff do
-						local kv = string.Explode("§", expstuff[i])
+						local kv = string.Explode("ï¿½", expstuff[i])
 						ent:SetKeyValue(kv[1], kv[2])
 					end
 					ent:Spawn()
@@ -458,7 +459,8 @@ function GM:InitPostEntity()
 	for teamid, spawns in pairs(self.Spawns) do
 		if teamid ~= TEAM_SPECTATOR then
 			if #spawns == 0 then
-				team.TeamInfo[teamid] = nil
+				-- TODO: This. Set team not joinable?
+				-- team.TeamInfo[teamid] = nil
 			else
 				table.insert(TEAMS_PLAYING, teamid)
 			end
@@ -468,49 +470,41 @@ function GM:InitPostEntity()
 	for _, ent in pairs(ents.FindByClass("info_target")) do
 		local lowername = string.lower(ent:GetName())
 		if lowername == "blueflagpoint" then
-			if team.TeamInfo[TEAM_BLUE] then team.TeamInfo[TEAM_BLUE].FlagPoint = ent:GetPos() end
+			team.SetFlagPoint(TEAM_BLUE, ent:GetPos())
 		elseif lowername == "redflagpoint" then
-			if team.TeamInfo[TEAM_RED] then team.TeamInfo[TEAM_RED].FlagPoint = ent:GetPos() end
+			team.SetFlagPoint(TEAM_RED, ent:GetPos())
 		elseif lowername == "yellowflagpoint" then
-			if team.TeamInfo[TEAM_YELLOW] then team.TeamInfo[TEAM_YELLOW].FlagPoint = ent:GetPos() end
+			team.SetFlagPoint(TEAM_YELLOW, ent:GetPos())
 		elseif lowername == "greenflagpoint" then
-			if team.TeamInfo[TEAM_GREEN] then team.TeamInfo[TEAM_GREEN].FlagPoint = ent:GetPos() end
+			team.SetFlagPoint(TEAM_BLUE, ent:GetPos())
 		end
 	end
 
 	for _, ent in pairs(ents.FindByClass("blueflagpoint")) do
-		if team.TeamInfo[TEAM_BLUE] then
-			team.TeamInfo[TEAM_BLUE].FlagPoint = ent:GetPos()
-		end
+		team.SetFlagPoint(TEAM_BLUE, ent:GetPos())
 	end
 
 	for _, ent in pairs(ents.FindByClass("redflagpoint")) do
-		if team.TeamInfo[TEAM_RED] then
-			team.TeamInfo[TEAM_RED].FlagPoint = ent:GetPos()
-		end
+		team.SetFlagPoint(TEAM_RED, ent:GetPos())
 	end
 
 	for _, ent in pairs(ents.FindByClass("yellowflagpoint")) do
-		if team.TeamInfo[TEAM_YELLOW] then
-			team.TeamInfo[TEAM_YELLOW].FlagPoint = ent:GetPos()
-		end
+		team.SetFlagPoint(TEAM_YELLOW, ent:GetPos())
 	end
 
 	for _, ent in pairs(ents.FindByClass("greenflagpoint")) do
-		if team.TeamInfo[TEAM_GREEN] then
-			team.TeamInfo[TEAM_GREEN].FlagPoint = ent:GetPos()
-		end
+		team.SetFlagPoint(TEAM_GREEN, ent:GetPos())
 	end
 
 	for _, ent in pairs(ents.FindByClass("flagspawn")) do
 		if ent.BlueTeam then
-			if team.TeamInfo[TEAM_BLUE] then team.TeamInfo[TEAM_BLUE].FlagPoint = ent:GetPos() end
+			team.SetFlagPoint(TEAM_BLUE, ent:GetPos())
 		elseif ent.RedTeam then
-			if team.TeamInfo[TEAM_RED] then team.TeamInfo[TEAM_RED].FlagPoint = ent:GetPos() end
+			team.SetFlagPoint(TEAM_RED, ent:GetPos())
 		elseif ent.YellowTeam then
-			if team.TeamInfo[TEAM_YELLOW] then team.TeamInfo[TEAM_YELLOW].FlagPoint = ent:GetPos() end
+			team.SetFlagPoint(TEAM_YELLOW, ent:GetPos())
 		elseif ent.GreenTeam then
-			if team.TeamInfo[TEAM_GREEN] then team.TeamInfo[TEAM_GREEN].FlagPoint = ent:GetPos() end
+			team.SetFlagPoint(TEAM_GREEN, ent:GetPos())
 		end
 	end
 
@@ -520,7 +514,7 @@ function GM:InitPostEntity()
 	else
 		local poss = {}
 		for _, teamid in pairs(TEAMS_PLAYING) do
-			local fp = team.TeamInfo[ teamid ].FlagPoint
+			local fp = team.GetFlagPoint(teamid)
 			if fp then
 				table.insert(poss, fp)
 			end
@@ -548,7 +542,7 @@ function GM:InitPostEntity()
 	end
 
 	for _, teamid in pairs(TEAMS_PLAYING) do
-		if not team.TeamInfo[teamid].FlagPoint then
+		if not team.GetFlagPoint(teamid) then
 			local poss = {}
 			for _, ent in pairs(self.Spawns[teamid]) do
 				table.insert(poss, ent:GetPos())
@@ -557,9 +551,9 @@ function GM:InitPostEntity()
 					for _, ppp in pairs(poss) do
 						pos = pos + ppp
 					end
-					team.TeamInfo[teamid].FlagPoint = pos / #poss + Vector(0, 0, 32)
+					team.SetFlagPoint(teamid, pos / #poss + Vector(0, 0, 32))
 				else
-					team.TeamInfo[teamid].FlagPoint = Vector(0,0,0)
+					team.SetFlagPoint(teamid, Vector(0,0,0))
 				end
 			end
 		end
@@ -598,7 +592,7 @@ function GM:InitPostEntity()
 			ent:SetPos(GAMEMODE.BallDrop)
 			ent:Spawn()
 			for i, teamid in pairs(TEAMS_PLAYING) do
-				team.TeamInfo[teamid].Flag = ent
+				team.SetFlag(teamid, ent)
 			end
 			GAMEMODE.Flag = ent
 			GAMEMODE.Ball = ent
@@ -606,13 +600,13 @@ function GM:InitPostEntity()
 	elseif self.FlagEntity then
 		for i=1, #TEAMS_PLAYING do
 			local teamid = TEAMS_PLAYING[i]
-			if team.TeamInfo[teamid].FlagPoint then
+			if team.GetFlagPoint(teamid) then
 				local ent = ents.Create(GAMEMODE.FlagEntity)
 				if ent:IsValid() then
-					ent:SetPos(team.TeamInfo[teamid].FlagPoint + Vector(0, 0, -16))
+					ent:SetPos(team.GetFlagPoint(teamid) + Vector(0, 0, -16))
 					ent:SetTeamID(teamid)
 					ent:Spawn()
-					team.TeamInfo[teamid].Flag = ent
+					team.SetFlag(teamid, ent)
 				end
 			end
 		end
@@ -928,9 +922,9 @@ function GM:PhysgunDrop(ply, ent)
 	end
 
 	if ent.ReverseTerritory then
-		local desireddistance = entpos:Distance(team.TeamInfo[ply:Team()].FlagPoint)
+		local desireddistance = entpos:Distance(team.GetFlagPoint(ply:Team()))
 		for _, teamid in pairs(TEAMS_PLAYING) do
-			if teamid ~= ply:Team() and desireddistance < entpos:Distance(team.TeamInfo[teamid].FlagPoint) then
+			if teamid ~= ply:Team() and desireddistance < entpos:Distance(team.GetFlagPoint(teamid)) then
 				ent:EmitSound("npc/roller/mine/rmine_blip3.wav")
 				self:RemoveProp(ply, ent)
 				ply:PrintMessage(HUD_PRINTTALK, "Can only be placed in enemy territory.")
@@ -940,8 +934,8 @@ function GM:PhysgunDrop(ply, ent)
 	end
 
 	for _, teamid in pairs(TEAMS_PLAYING) do
+		local point = team.GetFlagPoint(teamid)
 		if teamid ~= ply:Team() then
-			local point = team.TeamInfo[teamid].FlagPoint
 			if ent:NearestPoint(point):Distance(point) < BUILD_DISTANCE_TO_ENEMY then
 				ent:EmitSound("npc/roller/mine/rmine_blip3.wav")
 				self:RemoveProp(ply, ent)
@@ -949,7 +943,6 @@ function GM:PhysgunDrop(ply, ent)
 				return
 			end
 		else
-			local point = team.TeamInfo[teamid].FlagPoint
 			if IsInBox(ent, point + Vector(-96, -96, -40), point + Vector(96, 96, 128)) then
 				ent:EmitSound("npc/roller/mine/rmine_blip3.wav")
 				ent:Remove()
@@ -1156,7 +1149,7 @@ function GM:ResetAllFlags(mode)
 	end
 	for _, ent in pairs(ents.FindByClass("flag")) do
 		ent.Carrier = ent
-		ent:SetPos(team.TeamInfo[ent:GetTeamID()].FlagPoint + Vector(0,0,38))
+		ent:SetPos(team.GetFlagPoint(ent:GetTeamID()) + Vector(0,0,38))
 		ent:SetSolid(SOLID_VPHYSICS)
 		ent.Phys:EnableGravity(true)
 		ent.Phys:EnableMotion(mode == 2)
@@ -1187,10 +1180,10 @@ function GM:PlayerDisconnected(pl)
 
 	pl:RemoveAllStatus(true, true)
 
-	local teaminfo = team.TeamInfo[pl:Team()]
 	local steamid = pl:SteamID()
-
+	
 	if self.GameType == "ASLT" then
+		local teaminfo = team.TeamInfo[pl:Team()]
 		if not self.AlreadyLost[steamid] and teaminfo.Flag and teaminfo.Flag.CoreHealth < 3000 and pl.InitialSpawned + 120 < CurTime() then
 			self.AlreadyLost[steamid] = true
 			pl:AddPKV("AssaultLosses", 1)
@@ -1270,7 +1263,7 @@ function GM:FlagCaptured(carrier, selfteam, otherteam)
 
 	team.AddScore(selfteam, 1)
 
-	local carriers = team.TeamInfo[otherteam].Flag.Carriers
+	local carriers = team.GetFlag(otherteam).Carriers
 	local mostcarried = 0
 	local mostcarriedby = carrier
 	for seperatecarrier, timecarried in pairs(carriers) do
@@ -1578,7 +1571,7 @@ function GM:DoPlayerDeath(pl, attacker, dmginfo)
 
 		local spawntime = CurTime() - pl.SpawnTime
 
-		if pl:GetPos():Distance(team.TeamInfo[attacker:Team()].FlagPoint) < 1024 then
+		if pl:GetPos():Distance(team.GetFlagPoint(attacker:Team())) < 1024 then
 			if NDB then attacker:AddSilver(math.ceil(15 + math.min(150, spawntime * 0.25)) + BONUS_CORE_DEFENSE) end
 			attacker:AddDefense(1)
 			if isassist then
@@ -1660,7 +1653,7 @@ function GM:DoPlayerDeath(pl, attacker, dmginfo)
 					if not util.TraceLine({start = pl:GetPos(), endpos = pl:GetPos() + Vector(0, 0, -350), mask = MASK_SOLID_BRUSHONLY}).Hit and not attacker:HasAward("No_Flying_Zone") then
 						NDB.GiveAward(attacker, "No_Flying_Zone")
 					end
-					if wascarrying and self.GameType == "CTF" and pl:GetPos():Distance(team.TeamInfo[pl:Team()].FlagPoint) <= 800 and not attacker:HasAward("last-ditch_effort") then
+					if wascarrying and self.GameType == "CTF" and pl:GetPos():Distance(team.GetFlagPoint(pl:Team())) <= 800 and not attacker:HasAward("last-ditch_effort") then
 						NDB.GiveAward(attacker, "last-ditch_effort")
 					end
 				end
@@ -1839,12 +1832,12 @@ local function DelayFeed(self, pl)
 	if pl:IsValid() then
 		pl:SendLua("InitTeams({"..table.concat(TEAMS_PLAYING, ",").."}) OVERTIME="..tostring(OVERTIME).." "..(pl:Team() == TEAM_SPECTATOR and "MakepTeamSelect()" or "MakepClasses()"))
 		if self.FlagEntity then
-			for i in pairs(team.TeamInfo) do
+			for i in pairs(team.GetAllTeams()) do
 				if i < 9 and 0 < i then
 					umsg.Start("RecFlagInfo", pl)
 						umsg.Short(i)
-						umsg.Vector(team.TeamInfo[i].FlagPoint)
-						umsg.Entity(team.TeamInfo[i].Flag)
+						umsg.Vector(team.GetFlagPoint(i))
+						umsg.Entity(team.GetFlag(i))
 					umsg.End()
 				end
 			end
@@ -2029,9 +2022,8 @@ function GM:PlayerSpawn(pl)
 
 	pl:SendLocalPlayerSpawn()
 
-	local teamstuff = team.TeamInfo[pl:Team()]
-	if teamstuff then
-		local teamcolor = teamstuff.Color
+	local teamcolor = team.GetColor(pl:Team())
+	if teamcolor then
 		pl:SetPlayerColor(Vector(teamcolor.r / 100, teamcolor.g / 100, teamcolor.b / 100))
 	else
 		pl:SetPlayerColor(Vector(1, 1, 1))
@@ -2355,7 +2347,7 @@ local function CCMakeProp(sender, command, arguments)
 	end
 
 	for i=1, #TEAMS_PLAYING do
-		local flagpoint = team.TeamInfo[ TEAMS_PLAYING[i] ].FlagPoint
+		local flagpoint = team.GetFlagPoint(TEAMS_PLAYING[i])
 		if IsInBox(ent, flagpoint + Vector(-96, -96, -40), flagpoint + Vector(96, 96, 128)) then
 			ent:EmitSound("npc/roller/mine/rmine_blip3.wav")
 			ent:Remove()
@@ -2441,12 +2433,11 @@ local function CCMakeProp(sender, command, arguments)
 		return
 	end
 
-	local core = team.TeamInfo[ent:GetTeamID()].Flag
-	local desireddistance = entpos:Distance(team.TeamInfo[ent:GetTeamID()].FlagPoint)
+	local desireddistance = entpos:Distance(team.GetFlagPoint(ent:GetTeamID()))
 
 	if ent.ReverseTerritory then
 		for _, teamid in pairs(TEAMS_PLAYING) do
-			if desireddistance < entpos:Distance(team.TeamInfo[teamid].FlagPoint) then
+			if desireddistance < entpos:Distance(team.GetFlagPoint(teamid)) then
 				ent:EmitSound("npc/roller/mine/rmine_blip3.wav")
 				ent:Remove()
 				sender:CenterPrint( "Can only be placed in enemy territory.")
@@ -2457,7 +2448,7 @@ local function CCMakeProp(sender, command, arguments)
 
 	for _, teamid in pairs(TEAMS_PLAYING) do
 		if teamid ~= sender:Team() then
-			local point = team.TeamInfo[teamid].FlagPoint
+			local point = team.GetFlagPoint(teamid)
 			if ent:NearestPoint(point):Distance(point) < BUILD_DISTANCE_TO_ENEMY then
 				ent:EmitSound("npc/roller/mine/rmine_blip3.wav")
 				ent:Remove()

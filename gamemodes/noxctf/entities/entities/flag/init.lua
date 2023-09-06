@@ -21,7 +21,7 @@ function ENT:Initialize()
 	end
 
 	local teamid = self:GetTeamID()
-	local col = team.TeamInfo[teamid].Color
+	local col = team.GetColor(teamid)
 	self:SetColor(Color(col.r, col.g, col.b, 255))
 	self.Carriers = {}
 
@@ -54,7 +54,7 @@ function ENT:Returned(pl, far)
 	self.AutoReturnPlayer = nil
 
 	local myteam = self:GetTeamID()
-	local flagpoint = team.TeamInfo[myteam].FlagPoint
+	local flagpoint = team.GetFlagPoint(myteam)
 	if far then
 		umsg.Start("FlagReturnEffect")
 			umsg.Vector(self:GetPos())
@@ -86,7 +86,7 @@ function ENT:Touch(hitent)
 		if hitent:IsCarrying() then
 			if hitent:Team() == myteam then
 				if self:GetSkin() == 2 then
-					local dist = self:GetPos():Distance(team.TeamInfo[myteam].FlagPoint)
+					local dist = self:GetPos():Distance(team.GetFlagPoint(myteam))
 					if dist > 512 then
 						self:Returned(hitent, true)
 						return
@@ -100,9 +100,9 @@ function ENT:Touch(hitent)
 					local otherteam = hitent:GetTeamID()
 
 					if carrier:IsPlayer() then
-						local dist = hitent:GetPos():Distance(team.TeamInfo[myteam].FlagPoint)
+						local dist = hitent:GetPos():Distance(team.GetFlagPoint(myteam))
 						self:SetSolid(SOLID_VPHYSICS)
-						self:SetPos(team.TeamInfo[myteam].FlagPoint)
+						self:SetPos(team.GetFlagPoint(myteam))
 						self:SetCarrier(NULL)
 						self.Phys:EnableGravity(true)
 						self.Phys:EnableMotion(false)
@@ -112,7 +112,7 @@ function ENT:Touch(hitent)
 						self:SetSkin(0)
 
 						hitent:SetSolid(SOLID_VPHYSICS)
-						hitent:SetPos(team.TeamInfo[otherteam].FlagPoint)
+						hitent:SetPos(team.GetFlagPoint(otherteam))
 						hitent:SetCarrier(NULL)
 						hitent.Phys:EnableGravity(true)
 						hitent.Phys:EnableMotion(false)

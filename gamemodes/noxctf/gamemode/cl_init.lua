@@ -258,7 +258,7 @@ function ExplosiveEffect(pos, maxrange, damage, dmgtype)
 	local pos2 = pos + Vector(0, 0, 12)
 	for _, pl in pairs(player.GetAll()) do
 		local rag = pl:GetRagdollEntity()
-		if rag and not rag.Frozen then
+		if rag ~= NULL and not rag.Frozen then
 			local phys = rag:GetPhysicsObject()
 			if phys:IsValid() then
 				local physpos = phys:GetPos()
@@ -1338,9 +1338,10 @@ function InitTeams(teamtab)
 	for i=1, #TEAMS_PLAYING do
 		dontdestroy[ TEAMS_PLAYING[i] ] = true
 	end
-	for i in pairs(team.TeamInfo) do
+	for i in pairs(team.GetAllTeams()) do
 		if not dontdestroy[i] and i < 9 and 0 < i then
-			team.TeamInfo[i] = nil
+			-- TODO: This
+			-- team.TeamInfo[i] = nil
 		end
 	end
 end
@@ -1515,9 +1516,9 @@ end)
 
 usermessage.Hook("RecFlagInfo", function(um)
 	local index = um:ReadShort()
-	team.TeamInfo[index].FlagPoint = um:ReadVector()
+	team.SetFlagPoint(index, um:ReadVector())
 	local flag = um:ReadEntity()
-	team.TeamInfo[index].Flag = flag
+	team.SetFlag(index, flag)
 	flag:SetTeamID(index)
 end)
 

@@ -45,7 +45,7 @@ local function DrawGameTypeHUD(self, curtime)
 	local fx = 4
 	local fy = 4
 	for i, teamid in pairs(TEAMS_PLAYING) do
-		local col = team.TeamInfo[teamid].Color
+		local col = team.GetColor(teamid)
 		local tim = HTF_TIME - team.GetScore(teamid)
 		local text = ToMinutesSeconds(tim)
 		if teamid == teamcarrying then

@@ -164,16 +164,20 @@ function meta:GetNextSecondaryFire()
 	return self.m_NextSecondaryFire or 0
 end
 
-meta.OldSetNextPrimaryFire = meta.SetNextPrimaryFire
-function meta:SetNextPrimaryFire(fTime)
-	self.m_NextPrimaryFire = fTime
-	self:OldSetNextPrimaryFire(fTime)
+if not meta.OldSetNextPrimaryFire then
+	meta.OldSetNextPrimaryFire = meta.SetNextPrimaryFire
+	function meta:SetNextPrimaryFire(fTime)
+		self.m_NextPrimaryFire = fTime
+		self:OldSetNextPrimaryFire(fTime)
+	end
 end
 
-meta.OldSetNextSecondaryFire = meta.SetNextSecondaryFire
-function meta:SetNextSecondaryFire(fTime)
-	self.m_NextSecondaryFire = fTime
-	self:OldSetNextSecondaryFire(fTime)
+if not meta.OldSetNextSecondaryFire then
+	meta.OldSetNextSecondaryFire = meta.SetNextSecondaryFire
+	function meta:SetNextSecondaryFire(fTime)
+		self.m_NextSecondaryFire = fTime
+		self:OldSetNextSecondaryFire(fTime)
+	end
 end
 
 function meta:SetNextReload(fTime)

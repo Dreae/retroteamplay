@@ -106,7 +106,7 @@ local function DrawGameTypeHUD(self, curtime, screenscale)
 		local closest = 99999
 		for _, teamid in pairs(TEAMS_PLAYING) do
 			if teamid ~= myteam then
-				local fp = team.TeamInfo[teamid].FlagPoint
+				local fp = team.GetFlagPoint(teamid)
 				if fp then
 					local dist = fp:Distance(mypos)
 					if dist < closest then

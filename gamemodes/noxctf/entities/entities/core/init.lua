@@ -15,7 +15,7 @@ function ENT:Initialize()
 	end
 
 	local myteam = self:GetTeamID()
-	local col = team.TeamInfo[myteam].Color
+	local col = team.GetColor(myteam)
 	self:SetColor(Color(col.r, col.g, col.b, 255))
 
 	self:SetName(myteam)

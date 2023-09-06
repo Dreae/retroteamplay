@@ -20,11 +20,10 @@ function GM:BLTZInitialize()
 	end
 
 	for i, teamid in pairs(TEAMS_PLAYING) do
-		local tab = team.TeamInfo[teamid]
-		if tab.FlagPoint then
+		local entpos = team.GetFlagPoint(teamid)
+		if entpos then
 			local ent = ents.Create("prop_blitzgoal")
 			if ent:IsValid() then
-				local entpos = tab.FlagPoint
 				ent:SetPos(entpos)
 				local pos = Vector(self.BallDrop.x, self.BallDrop.y, self.BallDrop.z)
 				pos.z = entpos.z
@@ -33,7 +32,7 @@ function GM:BLTZInitialize()
 				local col = team.GetColor(teamid)
 				ent:SetColor(Color(col.r, col.g, col.b, 255))
 				ent:Spawn()
-				tab.Flag = ent
+				team.SetFlag(teamid, ent)
 				ent:DropToFloor()
 			end
 		end

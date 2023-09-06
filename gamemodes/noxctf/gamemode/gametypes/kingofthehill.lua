@@ -87,7 +87,7 @@ function GM:KOTHInitialize()
 				else
 					local pos = Vector(0,0,0)
 					for _, teamid in pairs(TEAMS_PLAYING) do
-						pos = pos + team.TeamInfo[teamid].FlagPoint
+						pos = pos + team.GetFlagPoint(teamid)
 					end
 					pos = pos / #TEAMS_PLAYING
 					pos = pos + Vector(math.Rand(-1500, 1500), math.Rand(-1500, 1500), 0)
@@ -97,7 +97,7 @@ function GM:KOTHInitialize()
 
 						pos = Vector(0,0,0)
 						for _, teamid in pairs(TEAMS_PLAYING) do
-							pos = pos + team.TeamInfo[teamid].FlagPoint
+							pos = pos + team.GetFlagPoint(teamid)
 						end
 						pos = pos / #TEAMS_PLAYING
 						pos = pos + Vector(math.Rand(-1500, 1500), math.Rand(-1500, 1500), 0)
@@ -120,7 +120,7 @@ function GM:KOTHInitialize()
 		else
 			local pos = Vector(0,0,0)
 			for _, teamid in pairs(TEAMS_PLAYING) do
-				pos = pos + team.TeamInfo[teamid].FlagPoint
+				pos = pos + team.GetFlagPoint(teamid)
 			end
 			pos = pos / #TEAMS_PLAYING
 			ent:SetPos(pos)

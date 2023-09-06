@@ -1,0 +1,12 @@
+{
+    "Lua.runtime.special": {
+        "include": "require"
+    },
+    "Lua.diagnostics.globals": [
+        "GM"
+    ],
+    "Lua.workspace.library": [
+        "/home/dreae/garrysmod/garrysmod/lua/includes"
+    ],
+    "Lua.completion.requireSeparator": ". /"
+}

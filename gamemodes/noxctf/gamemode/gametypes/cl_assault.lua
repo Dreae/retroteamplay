@@ -4,7 +4,7 @@ local function DrawGameTypeHUD(self, curtime)
 	local fx = 4
 	local fy = 4
 	for i, teamid in pairs(TEAMS_PLAYING) do
-		local flag = team.TeamInfo[teamid].Flag
+		local flag = team.GetFlag(teamid)
 
 		if flag:IsValid() then
 			local toscreen = (flag:GetPos() + Vector(0, 0, 32)):ToScreen()
@@ -33,7 +33,7 @@ local function DrawGameTypeHUD(self, curtime)
 				draw.DrawText("Mana Shield: "..GetGlobalInt("shield"..teamid, 0), "Default", toscreen.x, toscreen.y + texh + 18, color_white, TEXT_ALIGN_CENTER)
 			end
 
-			draw.SimpleText(team.GetScore(teamid), "DefaultBold", fx + 40, fy, team.TeamInfo[teamid].Color, TEXT_ALIGN_LEFT)
+			draw.SimpleText(team.GetScore(teamid), "DefaultBold", fx + 40, fy, team.GetColor(teamid), TEXT_ALIGN_LEFT)
 
 			fy = fy + 40
 			if 64 < fy then

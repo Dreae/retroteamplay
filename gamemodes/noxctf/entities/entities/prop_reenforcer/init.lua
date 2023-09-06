@@ -67,7 +67,7 @@ function ENT:AcceptInput(name, activator, caller)
 									effectdata:SetOrigin(entpos)
 								util.Effect("building_spawn", effectdata, true, true)
 								if 100 < maxhealth then
-									local home = team.TeamInfo[ent:GetTeamID()].FlagPoint
+									local home = team.GetFlagPoint(ent:GetTeamID())
 									if home:Distance(entpos) < 1400 then
 										local ownersteamid = ent.Owner
 										for _, pl in pairs(player.GetAll()) do

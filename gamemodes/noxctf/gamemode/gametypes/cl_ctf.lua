@@ -6,7 +6,7 @@ local function DrawGameTypeHUD(self, curtime)
 	local fx = 4
 	local fy = 4
 	for i, teamid in pairs(TEAMS_PLAYING) do
-		local flag = team.TeamInfo[teamid].Flag
+		local flag = team.GetFlag(teamid)
 
 		local toscreen = (flag:GetPos() + Vector(0, 0, 32)):ToScreen()
 		local skin = flag:GetSkin()
@@ -47,7 +47,7 @@ local function DrawGameTypeHUD(self, curtime)
 			end
 		end
 
-		draw.SimpleText(team.GetScore(teamid).." / "..MAX_SCORE, "teamplay_teamscores", fx + 40, fy, team.TeamInfo[teamid].Color, TEXT_ALIGN_LEFT)
+		draw.SimpleText(team.GetScore(teamid).." / "..MAX_SCORE, "teamplay_teamscores", fx + 40, fy, team.GetColor(teamid), TEXT_ALIGN_LEFT)
 
 		fy = fy + 40
 		if 64 < fy then

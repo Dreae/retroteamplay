@@ -35,6 +35,7 @@ GM.GameType = "CTF"
 GM.FlagEntity = "flag"
 GM.DisabledSpells = {}
 GM.DisabledClasses = {}
+GM.TeamBased = true
 
 function GetSWEPClassName(foldername)
 	return string.match(foldername, ".-[/\\](.+)")
@@ -132,7 +133,7 @@ end
 
 function GM:GetRagdollEyes(pl)
 	local Ragdoll = pl:GetRagdollEntity()
-	if not Ragdoll then return end
+	if Ragdoll == NULL then return end
 
 	local att = Ragdoll:GetAttachment(Ragdoll:LookupAttachment("eyes"))
 	if att then

@@ -1,66 +1,37 @@
-team = {}
-team.TeamInfo = {}
-team.DefaultColor = Color(255, 255, 100, 255)
+local nox_teams = {}
 
-team.TeamInfo[TEAM_CONNECTING] = {Name = "Joining/Connecting", Color = DefaultColor, Score = 0, Props = 9999}
-team.TeamInfo[TEAM_UNASSIGNED] = {Name = "Unassigned", Color = DefaultColor, Score = 0, Props = 9999}
-team.TeamInfo[TEAM_SPECTATOR] = {Name = "Spectator", Color = DefaultColor, Score = 0, Props = 9999}
-
-function team.SetUp(id, name, color)
-	team.TeamInfo[id] = {Name = name, Color = color, Score = 0, Props = 0}
+function team.GetFlagPoint(index)
+	if nox_teams[index] ~= nil then
+		return nox_teams[index].FlagPoint
+	end
+	return nil
 end
 
-function team.TotalDeaths(index)
-	if not index then return 0 end
-
-	local score = 0
-	for id, pl in pairs(player.GetAll()) do
-		if pl:Team() == index then
-			score = score + pl:Deaths()
-		end
+function team.SetFlagPoint(index, point)
+	if nox_teams[index] ~= nil then
+		nox_teams[index].FlagPoint = point
+	else
+		nox_teams[index] = {
+			FlagPoint = point
+		}
 	end
-	return score
 end
 
-function team.TotalFrags(index)
-	if not index then return 0 end
-
-	local score = 0
-	for id, pl in pairs(player.GetAll()) do
-		if pl:Team() == index then
-			score = score + pl:Frags()
-		end
+function team.GetFlag(index)
+	if nox_teams[index] ~= nil then
+		return nox_teams[index].Flag
 	end
-	return score
+	return nil
 end
 
-function team.NumPlayers(index)
-	if index then
-		return #team.GetPlayers(index)
+function team.SetFlag(index, flag)
+	if nox_teams[index] ~= nil then
+		nox_teams[index].Flag = flag
+	else
+		nox_teams[index] = {
+			Flag = flag
+		}
 	end
-	return 0
-end
-
-function team.GetPlayers(index)
-	if not index then return {} end
-
-	local TeamPlayers = {}
-
-	for id,pl in pairs(player.GetAll()) do
-		if pl:Team() == index then
-			table.insert(TeamPlayers, pl)
-		end
-	end
-
-	return TeamPlayers
-end
-
-function team.GetScore(index)
-	if index then
-		return GetGlobalInt(index.."Sc", 0)
-	end
-
-	return 0
 end
 
 function team.GetProps(index)
@@ -107,40 +78,10 @@ function team.SetManaRate(index, rate)
 	SetGlobalInt(index.."MRate", rate)
 end
 
-function team.GetName(index)
-	if not team.TeamInfo[index] then return "" end
-	return team.TeamInfo[index].Name
-end
-
-function team.GetColor(index)
-	if not team.TeamInfo[index] then return team.DefaultColor end
-	return team.TeamInfo[index].Color
-end
-
-function team.SetScore(index, score)
-	if index then
-		SetGlobalInt(index.."Sc", score)
-	end
-end
-
-function team.AddScore(index, score)
-	if index then
-		team.SetScore(index, team.GetScore(index) + score)
-	end
-end
-
 function team.TotalValue(index)
 	local value = 0
 	for _, pl in pairs(team.GetPlayers(index)) do
 		value = value + pl:TeamValue()
 	end
 	return value
-end
-
-function team.GetColor(index)
-	if team.TeamInfo[index] then
-		return team.TeamInfo[index].Color
-	end
-
-	return team.DefaultColor
 end

@@ -28,9 +28,7 @@ function ENT:DoExplode()
 	util.Effect("HelicopterMegaBomb", effectdata, true, true)
 
 	local teamid = self:GetTeamID()
-	if team.TeamInfo[teamid] then
-		team.AddProps(teamid, -1)
-	end
+	team.AddProps(teamid, -1)
 
 	local ownersteam = self.Owner
 	local attacker = self

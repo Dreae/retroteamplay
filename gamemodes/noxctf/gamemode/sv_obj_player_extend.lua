@@ -1,5 +1,6 @@
 local meta = FindMetaTable("Player")
 if not meta then return end
+if meta.OldFreeze or meta.OldSetTeam then return end
 
 meta.OldFreeze = meta.Freeze
 meta.OldSetTeam = meta.SetTeam
@@ -49,16 +50,6 @@ function meta:FixModelAngles(velocity)
 	self:SetPoseParameter("move_yaw", math.NormalizeAngle(velocity:Angle().yaw - eye.y))
 end
 
-local function teamsort(a, b)
-	local numa, numb = team.NumPlayers(a), team.NumPlayers(b)
-
-	if numa == numb then
-		return team.TotalFrags(a) < team.TotalFrags(b)
-	end
-
-	return numa < numb or numa < numb + 1 and team.TotalFrags(a) <= team.TotalFrags(b) - 100
-end
-
 function meta:JoinBalancedTeam(override)
 	if not override then
 		local previd = GAMEMODE.TeamLocks[self:UniqueID()]
@@ -68,10 +59,8 @@ function meta:JoinBalancedTeam(override)
 		end
 	end
 
-	local sortedteams = table.Copy(TEAMS_PLAYING)
-	table.sort(sortedteams, teamsort)
-
-	self:SetTeam(sortedteams[1])
+	local target_team = team.BestAutoJoinTeam()
+	self:SetTeam(target_team)
 end
 
 function meta:TeamValue()
