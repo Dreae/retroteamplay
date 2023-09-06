@@ -1,9 +1,5 @@
 local meta = FindMetaTable("Player")
 if not meta then return end
-if meta.OldFreeze or meta.OldSetTeam then return end
-
-meta.OldFreeze = meta.Freeze
-meta.OldSetTeam = meta.SetTeam
 
 function meta:RemoveInvisibility()
 	if self.status_invisibility and self.status_invisibility:IsValid() then
@@ -193,20 +189,17 @@ function meta:IsFrozen()
 	return self.m_IsFrozen
 end
 
-function meta:Freeze(bFreeze)
-	self.m_IsFrozen = bFreeze
-	self:OldFreeze(bFreeze)
+
+if not meta.OldFreeze then 
+	meta.OldFreeze = meta.Freeze
+	function meta:Freeze(bFreeze)
+		self.m_IsFrozen = bFreeze
+		self:OldFreeze(bFreeze)
+	end
 end
 
 function meta:SetTeamID(iTeam)
 	self:SetTeam(iTeam)
-end
-
-function meta:SetTeam(id)
-	self:OldSetTeam(id)
-	if table.HasValue(TEAMS_PLAYING, id) then
-		GAMEMODE.TeamLocks[self:UniqueID()] = id
-	end
 end
 
 function meta:LMR(int, args)

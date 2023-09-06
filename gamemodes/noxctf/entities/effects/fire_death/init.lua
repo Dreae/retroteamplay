@@ -26,7 +26,7 @@ function EFFECT:Think()
 		return self.Threshold < 1
 	end
 
-	if ent then
+	if ent:IsValid() then
 		ent.Burnt = true
 		self.Entity:SetPos(ent:GetPos())
 		self.DoDraw = true

@@ -10,7 +10,7 @@ function ENT:Draw()
 	local owner = self:GetOwner()
 	if owner:IsValid() and not (owner == MySelf and not owner:ShouldDrawLocalPlayer() and not owner:GetRagdollEntity()) then
 		local rag = owner:GetRagdollEntity()
-		if rag then
+		if rag:IsValid() then
 			owner = rag
 		elseif not owner:Alive() or owner:IsInvisible() then return end
 

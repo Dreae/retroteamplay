@@ -25,7 +25,7 @@ function EFFECT:Think()
 
 	ent = ent:GetRagdollEntity()
 
-	if ent then
+	if ent:IsValid() then
 		if not self.Frozen then
 			self.Frozen = true
 			ent.Frozen = true

@@ -129,6 +129,12 @@ end
 
 GM.TeamLocks = {}
 
+hook.Add("PlayerChangedTeam", "nox_on_changed_team", function (ply, old_team, new_team)
+	if table.HasValue(TEAMS_PLAYING, new_team) then
+		GAMEMODE.TeamLocks[ply:UniqueID()] = new_team
+	end	
+end)
+
 function GM:IsOnRightSide(ent, teamid)
 	if teamid then
 		-- TODO: This
@@ -433,6 +439,14 @@ function GM:InitPostEntity()
 		end
 	end
 
+	timer.Simple(0, function ()
+		self:FinishPostEntity()
+	end)
+
+	RunConsoleCommand("mapcyclefile", "mapcycle_noxctf.txt")
+end
+
+function GM:FinishPostEntity()
 	self.Spawns = {}
 	self.Spawns[TEAM_BLUE] = ents.FindByClass("info_player_blue")
 	self.Spawns[TEAM_YELLOW] = ents.FindByClass("info_player_yellow")
@@ -458,10 +472,7 @@ function GM:InitPostEntity()
 
 	for teamid, spawns in pairs(self.Spawns) do
 		if teamid ~= TEAM_SPECTATOR then
-			if #spawns == 0 then
-				-- TODO: This. Set team not joinable?
-				-- team.TeamInfo[teamid] = nil
-			else
+			if #spawns ~= 0 then
 				table.insert(TEAMS_PLAYING, teamid)
 			end
 		end
@@ -559,23 +570,6 @@ function GM:InitPostEntity()
 		end
 	end
 
-	--[[if file.Exists(GAMEMODE_NAME.."_gametype.txt", "DATA") then
-		local gt = file.Read(GAMEMODE_NAME.."_gametype.txt")
-
-		if self[gt.."Initialize"] then
-			self[gt.."Initialize"](self)
-		end
-	elseif self.CTFInitialize then
-		self:CTFInitialize()
-	else
-		local gt = self.GameTypes[1]
-		if gt then
-			self[gt.."Initialize"](self)
-		else
-			ErrorNoHalt("NO GAMETYPES FOUND!?")
-		end
-	end]]
-
 	if file.Exists(GAMEMODE_NAME.."_gametype.txt", "DATA") then --???
 		local gt = file.Read(GAMEMODE_NAME.."_gametype.txt")
 
@@ -603,7 +597,7 @@ function GM:InitPostEntity()
 			if team.GetFlagPoint(teamid) then
 				local ent = ents.Create(GAMEMODE.FlagEntity)
 				if ent:IsValid() then
-					ent:SetPos(team.GetFlagPoint(teamid) + Vector(0, 0, -16))
+					ent:SetPos(team.GetFlagPoint(teamid) + Vector(0, 0, 16))
 					ent:SetTeamID(teamid)
 					ent:Spawn()
 					team.SetFlag(teamid, ent)
@@ -619,8 +613,6 @@ function GM:InitPostEntity()
 	end
 
 	self:SetWalls(false)
-
-	RunConsoleCommand("mapcyclefile", "mapcycle_noxctf.txt")
 end
 
 function GM:PlayerSelectSpawn(pl)

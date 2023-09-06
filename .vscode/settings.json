@@ -8,5 +8,5 @@
     "Lua.workspace.library": [
         "/home/dreae/garrysmod/garrysmod/lua/includes"
     ],
-    "Lua.completion.requireSeparator": ". /"
+    "Lua.completion.requireSeparator": "/"
 }
