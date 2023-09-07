@@ -34,6 +34,40 @@ function team.SetFlag(index, flag)
 	end
 end
 
+function team.GetRealScore(index)
+	if nox_teams[index] ~= nil then
+		return nox_teams[index].RealScore
+	end
+	return 0
+end
+
+function team.SetRealScore(index, score)
+	if nox_teams[index] ~= nil then
+		nox_teams[index].RealScore = score
+	else
+		nox_teams[index] = {
+			RealScore = score
+		}
+	end
+end
+
+function team.GetLastMinute(index)
+	if nox_teams[index] ~= nil then
+		return nox_teams[index].LastMinute
+	end
+	return 0
+end
+
+function team.SetLastMinute(index, time)
+	if nox_teams[index] ~= nil then
+		nox_teams[index].LastMinute = time
+	else
+		nox_teams[index] = {
+			LastMinute = time
+		}
+	end
+end
+
 function team.GetProps(index)
 	if index then
 		return GetGlobalInt(index.."Pro", 0)

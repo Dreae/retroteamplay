@@ -12,8 +12,8 @@ function GM:KOTHInitialize()
 	end)
 
 	for _, teamid in pairs(TEAMS_PLAYING) do
-		team.TeamInfo[teamid].RealScore = 0
-		team.TeamInfo[teamid].LastMinute = math.floor(KOTH_TIME / 60)
+		team.SetRealScore(teamid, 0)
+		team.SetLastMinute(teamid, math.floor(KOTH_TIME / 60))
 	end
 
 	function self:KOTH_AreaMoved()

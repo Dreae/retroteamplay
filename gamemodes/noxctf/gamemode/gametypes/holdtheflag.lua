@@ -13,8 +13,8 @@ function GM:HTFInitialize()
 	end)
 
 	for _, teamid in pairs(TEAMS_PLAYING) do
-		team.TeamInfo[teamid].RealScore = 0
-		team.TeamInfo[teamid].LastMinute = math.floor(HTF_TIME / 60) - 1
+		team.SetRealScore(teamid, 0)
+		team.SetLastMinute(math.floor(HTF_TIME / 60) - 1)
 	end
 
 	function self:HandleOvertime()
@@ -47,22 +47,20 @@ function GM:HTFInitialize()
 	function self:HTF_AwardPoints(carrier, carrierteam, deltatime, ent)
 		if ENDGAME then return end
 
-		local tab = team.TeamInfo[carrierteam]
-		if not tab.RealScore then tab.RealScore = 0 end
-		if not tab.LastMinute then tab.LastMinute = math.floor(HTF_TIME / 60) end
+		if not team.GetLastMinute(carrierteam) then team.SetLastMinute(carrierteam, math.floor(HTF_TIME / 60)) end
 
-		local newscore = math.min(HTF_TIME, tab.RealScore + deltatime)
-		tab.RealScore = newscore
+		local newscore = math.min(HTF_TIME, team.GetRealScore(carrierteam) + deltatime)
+		tab.SetRealScore(carrierteam, newscore)
 
 		if team.GetScore(carrierteam) < math.ceil(newscore) then
 			team.SetScore(carrierteam, math.ceil(newscore))
-			if math.floor((HTF_TIME - newscore) / 60) < tab.LastMinute and HTF_TIME ~= newscore then
-			tab.LastMinute = math.floor((HTF_TIME - newscore) / 60)
+			if math.floor((HTF_TIME - newscore) / 60) < team.GetLastMinute(carrierteam) and HTF_TIME ~= newscore then
+			tab.SetLastMinute(carrierteam, math.floor((HTF_TIME - newscore) / 60))
 
-				if tab.LastMinute == 0 then
+				if team.GetLastMinute(carrierteam) == 0 then
 					self:CenterPrintAll(team.GetName(carrierteam).." has ONE MORE MINUTE left to win!!~snpc/roller/mine/rmine_tossed1.wav", "COLOR_RED")
 				else
-					self:CenterPrintAll(team.GetName(carrierteam).." has "..(tab.LastMinute + 1).." more minutes left to win!~sweapons/physcannon/energy_sing_flyby2.wav")
+					self:CenterPrintAll(team.GetName(carrierteam).." has "..(team.GetLastMinute(carrierteam) + 1).." more minutes left to win!~sweapons/physcannon/energy_sing_flyby2.wav")
 				end
 			end
 		end

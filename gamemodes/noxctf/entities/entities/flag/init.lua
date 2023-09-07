@@ -156,7 +156,7 @@ function ENT:Touch(hitent)
 				end
 			end
 		elseif hitent:Team() == myteam and self:GetSkin() == 2 then
-			local dist = self:GetPos():Distance(team.TeamInfo[myteam].FlagPoint)
+			local dist = self:GetPos():Distance(team.GetFlagPoint(myteam))
 			if dist >= 256 then
 				if not self.AutoReturnPlayer then
 					self.AutoReturnTimer = CurTime() + CTF_FLAG_RETURNTIME

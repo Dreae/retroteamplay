@@ -1184,8 +1184,8 @@ function GM:PlayerDisconnected(pl)
 	local steamid = pl:SteamID()
 	
 	if self.GameType == "ASLT" then
-		local teaminfo = team.TeamInfo[pl:Team()]
-		if not self.AlreadyLost[steamid] and teaminfo.Flag and teaminfo.Flag.CoreHealth < 3000 and pl.InitialSpawned + 120 < CurTime() then
+		local flag = team.GetFlag(pl:Team())
+		if not self.AlreadyLost[steamid] and flag and flag:IsValid() and flag.CoreHealth < 3000 and pl.InitialSpawned + 120 < CurTime() then
 			self.AlreadyLost[steamid] = true
 			pl:AddPKV("AssaultLosses", 1)
 			if NDB then NDB.SaveInfo(pl) end
