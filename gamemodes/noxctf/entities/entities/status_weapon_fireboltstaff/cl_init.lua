@@ -18,9 +18,9 @@ function ENT:DrawTranslucent()
 	if not owner:IsValid() then return end
 
 	local rag = owner:GetRagdollEntity()
-	if rag then
+	if rag:IsValid() then
 		owner = rag
-	elseif not owner:Alive() || owner:IsInvisible() then return end
+	elseif not owner:Alive() or owner:IsInvisible() then return end
 
 	local angpos = owner:GetAttachment(owner:LookupAttachment("anim_attachment_RH"))
 

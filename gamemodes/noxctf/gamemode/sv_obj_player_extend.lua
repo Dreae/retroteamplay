@@ -49,7 +49,7 @@ end
 function meta:JoinBalancedTeam(override)
 	if not override then
 		local previd = GAMEMODE.TeamLocks[self:UniqueID()]
-		if previd then
+		if previd and TEAMS_PLAYING[previd] ~= nil then
 			self:SetTeam(previd)
 			return
 		end

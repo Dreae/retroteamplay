@@ -435,6 +435,8 @@ function GM:InitPostEntity()
 		end
 	end
 
+	self:DisableTeams()
+
 	timer.Simple(0, function ()
 		self:FinishPostEntity()
 	end)
@@ -466,9 +468,11 @@ function GM:FinishPostEntity()
 		end
 	end
 
+	self.DisableTeams()
 	for teamid, spawns in pairs(self.Spawns) do
 		if teamid ~= TEAM_SPECTATOR then
 			if #spawns ~= 0 then
+				team.SetUp(teamid, TEAM_NAMES[teamid], TEAM_COLORS[teamid], true)
 				table.insert(TEAMS_PLAYING, teamid)
 			end
 		end
@@ -609,6 +613,15 @@ function GM:FinishPostEntity()
 	end
 
 	self:SetWalls(false)
+end
+
+function GM.DisableTeams()
+	TEAMS_PLAYING = {}
+
+	team.SetUp(TEAM_BLUE, BLUE_NAME, TEAM_COLORS[TEAM_BLUE], false)
+	team.SetUp(TEAM_YELLOW, YELLOW_NAME, TEAM_COLORS[TEAM_YELLOW], false)
+	team.SetUp(TEAM_GREEN, GREEN_NAME, TEAM_COLORS[TEAM_GREEN], false)
+	team.SetUp(TEAM_RED, RED_NAME, TEAM_COLORS[TEAM_RED], false)
 end
 
 function GM:PlayerSelectSpawn(pl)

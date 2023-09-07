@@ -116,6 +116,7 @@ end]]
 local function spellsort(a, b)
 	return string.lower(Spells[a].Name) < string.lower(Spells[b].Name)
 end
+
 function GM:SetUpCastableSpells()
 	for classindex, classtab in pairs(CLASSES) do
 		local castable = {}
