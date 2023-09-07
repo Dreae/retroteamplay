@@ -15,8 +15,8 @@ SWEP.Secondary.Automatic = true
 SWEP.Secondary.Ammo	= "none"
 
 SWEP.NextAttack = -10
-SWEP.MaxMana = 60
-SWEP.AmmoPerCharge = 12
+SWEP.MaxMana = 200
+SWEP.AmmoPerCharge = 50
 SWEP.ChargeAmmo = 1
 
 SWEP.Droppable = "pickup_fireboltstaff"

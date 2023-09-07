@@ -15,9 +15,9 @@ SWEP.Secondary.Automatic = true
 SWEP.Secondary.Ammo	= "none"
 
 SWEP.NextAttack = -10
-SWEP.MaxMana = 60
+SWEP.MaxMana = 200
 SWEP.ChargeAmmo = 1
-SWEP.AmmoPerCharge = 15
+SWEP.AmmoPerCharge = 50
 
 SWEP.Droppable = "pickup_lightningstaff"
 

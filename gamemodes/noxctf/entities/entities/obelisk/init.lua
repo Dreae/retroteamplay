@@ -14,7 +14,7 @@ ENT.NextSound = 0
 ENT.Sappers = 0
 ENT.LastThink = 0
 ENT.MaxDistance = 200
-ENT.MinDistance = 65
+ENT.MinDistance = 45
 
 function ENT:Initialize()
 	self:SetModel(rockmodels[math.random(1, #rockmodels)])
@@ -53,7 +53,7 @@ end
 ---
 
 function ENT:Think()
-	if not self:CanDrain(ent) then return end
+	if not self:CanDrain() then return end
 
 	local ents = ents.FindInSphere(self:GetPos(), self.MaxDistance)
 	for _, ent in ipairs(ents) do
@@ -69,16 +69,21 @@ end
 
 function ENT:TransferMana(player, distance)
 	if 1 <= self:GetMana() and 0 < player:GetManaRegeneration() then
+		local amount = self.DrainPerSecond * (1 - math.pow(math.max(distance - self.MinDistance, 0) / self.MaxDistance, 0.33))
+		amount = math.min(self:GetMana(), (CurTime() - self.LastThink) * amount)
+
 		local wep = player:GetActiveWeapon()
 		if wep:IsValid() and wep.MaxMana and player:GetAmmoCount(wep.ChargeAmmo) < wep.MaxMana then
-			player:GiveAmmo(1, wep.ChargeAmmo, true)
+			player:GiveAmmo(amount, wep.ChargeAmmo, true)
+			self:SetMana(self:GetMana() - (amount * 0.5))
 
 			self:PlayDrainSound()
 		end
+
 		if player:GetMana() < player:GetMaxMana() then
-			local amount = self.DrainPerSecond - (self.DrainPerSecond * math.pow(math.max(distance - self.MinDistance, 0) / self.MaxDistance, 0.5))
-			amount = math.min(self:GetMana(), (CurTime() - self.LastThink) * amount)
 			amount = player:GetStatus("manasickness") and ( amount * 0.3333 ) or amount
+			print("Gave "..amount.." mana to "..player:GetName())
+
 			player:SetMana(math.min(player:GetMana() + amount, player:GetMaxMana()), true)
 			self:SetMana(self:GetMana() - amount)
 
@@ -87,7 +92,7 @@ function ENT:TransferMana(player, distance)
 	end
 end
 
-function ENT:CanDrain(ent)
+function ENT:CanDrain()
 	return self:GetMana() > self.NoDrainThreshold
 end
 
