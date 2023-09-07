@@ -137,19 +137,15 @@ end)
 
 function GM:IsOnRightSide(ent, teamid)
 	if teamid then
-		-- TODO: This
-		-- local teaminfo = team.TeamInfo[teamid]
-		-- if teaminfo then
-		-- 	local flagpoint = teaminfo.FlagPoint
-		-- 	if flagpoint then
-		-- 		local desireddistance = ent:NearestPoint(flagpoint):Distance(flagpoint)
-		-- 		for _, teamid2 in pairs(TEAMS_PLAYING) do
-		-- 			if ent:NearestPoint(flagpoint):Distance(team.TeamInfo[teamid2].FlagPoint) < desireddistance then
-		-- 				return false
-		-- 			end
-		-- 		end
-		-- 	end
-		-- end
+		local flagpoint = team.GetFlagPoint(teamid)
+		if flagpoint then
+			local desireddistance = ent:NearestPoint(flagpoint):Distance(flagpoint)
+			for _, teamid2 in pairs(TEAMS_PLAYING) do
+				if ent:NearestPoint(flagpoint):Distance(team.GetFlagPoint(teamid2)) < desireddistance then
+					return false
+				end
+			end
+		end
 	end
 
 	return true

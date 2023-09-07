@@ -8,5 +8,6 @@
     "Lua.workspace.library": [
         "/home/dreae/garrysmod/garrysmod/lua/includes"
     ],
-    "Lua.completion.requireSeparator": "/"
+    "Lua.completion.requireSeparator": "/",
+    "todo-tree.regex.regex": "(//|#|<!--|--|;|/\\*|^|^[ \\t]*(-|\\d+.))\\s*($TAGS)"
 }

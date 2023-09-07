@@ -1333,17 +1333,6 @@ end
 
 function InitTeams(teamtab)
 	TEAMS_PLAYING = teamtab
-
-	local dontdestroy = {}
-	for i=1, #TEAMS_PLAYING do
-		dontdestroy[ TEAMS_PLAYING[i] ] = true
-	end
-	for i in pairs(team.GetAllTeams()) do
-		if not dontdestroy[i] and i < 9 and 0 < i then
-			-- TODO: This
-			-- team.TeamInfo[i] = nil
-		end
-	end
 end
 
 CURRENT_SPELL = "none"
