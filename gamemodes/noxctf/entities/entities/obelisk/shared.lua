@@ -3,7 +3,7 @@ ENT.RenderGroup = RENDERGROUP_TRANSLUCENT
 
 ENT.RegenerationPerSecond = 3
 ENT.NoDrainThreshold = ENT.RegenerationPerSecond
-ENT.DrainPerSecond = 40
+ENT.DrainPerSecond = 30
 ENT.LeechPerSecond = 70
 ENT.MaxMana = 125
 ENT.CanBeManaDrained = true

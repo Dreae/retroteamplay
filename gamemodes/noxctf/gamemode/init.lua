@@ -1304,10 +1304,6 @@ function GM:PlayerCanCast(pl, spell)
 	return not pl:InVehicle()
 end
 
-local function RealMap(map)
-	return string.match(map, "(.+)%.bsp")
-end
-
 function GM:LoadNextMap()
 	game.LoadNextMap()
 end

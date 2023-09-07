@@ -3,13 +3,18 @@ AddCSLuaFile("shared.lua")
 
 include("shared.lua")
 
-local rockmodels = {"models/props_wasteland/rockcliff01b.mdl",
-"models/props_wasteland/rockcliff01c.mdl",
-"models/props_wasteland/rockcliff01e.mdl",
-"models/props_wasteland/rockcliff01g.mdl"}
+local rockmodels = {
+	"models/props_wasteland/rockcliff01b.mdl",
+	"models/props_wasteland/rockcliff01c.mdl",
+	"models/props_wasteland/rockcliff01e.mdl",
+	"models/props_wasteland/rockcliff01g.mdl"
+}
 
 ENT.NextSound = 0
 ENT.Sappers = 0
+ENT.LastThink = 0
+ENT.MaxDistance = 200
+ENT.MinDistance = 65
 
 function ENT:Initialize()
 	self:SetModel(rockmodels[math.random(1, #rockmodels)])
@@ -30,6 +35,7 @@ function ENT:Initialize()
 		self:SetMaxMana(self.MaxMana)
 	end
 	self:SetMana(self:GetMaxMana())
+	self.LastThink = CurTime()
 end
 
 -- May not be needed
@@ -46,58 +52,34 @@ function ENT:Alive()
 end
 ---
 
-function ENT:Use( ent, caller )
+function ENT:Think()
 	if not self:CanDrain(ent) then return end
 
-	if drain then
-		local amount = math.min(self:GetMana(), FrameTime() * self.LeechPerSecond)
-		amount = ent:GetStatus("manasickness") and ( amount * 0.3333 ) or amount
-		ent:SetMana(math.min(ent:GetMana() + amount, ent:GetMaxMana()), true)
-		self:SetMana(self:GetMana() - amount)
-	elseif ent:IsPlayer() and 1 <= self:GetMana() and 0 < ent:GetManaRegeneration() then
-		local wep = ent:GetActiveWeapon()
-		if wep:IsValid() and wep.MaxMana and ent:GetAmmoCount(wep.ChargeAmmo) < wep.MaxMana then
-			local amount = math.min(self:GetMana(), FrameTime() * self.DrainPerSecond)
-			amount = ent:GetStatus("manasickness") and ( amount * 0.3333 ) or amount
-			ent:SetMana(math.min(ent:GetMana() + amount, ent:GetMaxMana()), true)
-			ent:GiveAmmo(1, wep.ChargeAmmo)
-			self:SetMana(self:GetMana() - amount)
+	local ents = ents.FindInSphere(self:GetPos(), self.MaxDistance)
+	for _, ent in ipairs(ents) do
+		if ent:IsPlayer() and 1 <= self:GetMana() and 0 < ent:GetManaRegeneration() then 
+			local distance = ent:GetPos():Distance(self:GetPos())
+			if distance <= self.MaxDistance then
+				self:TransferMana(ent, distance)
+			end
+		end
+	end
+	self.LastThink = CurTime()
+end
 
-			self:PlayDrainSound()
-		elseif ent:GetMana() < ent:GetMaxMana() then
-			local amount = math.min(self:GetMana(), FrameTime() * self.DrainPerSecond)
-			amount = ent:GetStatus("manasickness") and ( amount * 0.3333 ) or amount
-			ent:SetMana(math.min(ent:GetMana() + amount, ent:GetMaxMana()), true)
-			self:SetMana(self:GetMana() - amount)
+function ENT:TransferMana(player, distance)
+	if 1 <= self:GetMana() and 0 < player:GetManaRegeneration() then
+		local wep = player:GetActiveWeapon()
+		if wep:IsValid() and wep.MaxMana and player:GetAmmoCount(wep.ChargeAmmo) < wep.MaxMana then
+			player:GiveAmmo(1, wep.ChargeAmmo, true)
 
 			self:PlayDrainSound()
 		end
-	end
-	
-end
-
-function ENT:Touch(ent, drain)
-	if not self:CanDrain(ent) then return end
-
-	if drain then
-		local amount = math.min(self:GetMana(), FrameTime() * self.LeechPerSecond)
-		amount = ent:GetStatus("manasickness") and ( amount * 0.3333 ) or amount
-		ent:SetMana(math.min(ent:GetMana() + amount, ent:GetMaxMana()), true)
-		self:SetMana(self:GetMana() - amount)
-	elseif ent:IsPlayer() and 1 <= self:GetMana() and 0 < ent:GetManaRegeneration() then
-		local wep = ent:GetActiveWeapon()
-		if wep:IsValid() and wep.MaxMana and ent:GetAmmoCount(wep.ChargeAmmo) < wep.MaxMana then
-			local amount = math.min(self:GetMana(), FrameTime() * self.DrainPerSecond)
-			amount = ent:GetStatus("manasickness") and ( amount * 0.3333 ) or amount
-			ent:SetMana(math.min(ent:GetMana() + amount, ent:GetMaxMana()), true)
-			ent:GiveAmmo(1, wep.ChargeAmmo)
-			self:SetMana(self:GetMana() - amount)
-
-			self:PlayDrainSound()
-		elseif ent:GetMana() < ent:GetMaxMana() then
-			local amount = math.min(self:GetMana(), FrameTime() * self.DrainPerSecond)
-			amount = ent:GetStatus("manasickness") and ( amount * 0.3333 ) or amount
-			ent:SetMana(math.min(ent:GetMana() + amount, ent:GetMaxMana()), true)
+		if player:GetMana() < player:GetMaxMana() then
+			local amount = self.DrainPerSecond - (self.DrainPerSecond * math.pow(math.max(distance - self.MinDistance, 0) / self.MaxDistance, 0.5))
+			amount = math.min(self:GetMana(), (CurTime() - self.LastThink) * amount)
+			amount = player:GetStatus("manasickness") and ( amount * 0.3333 ) or amount
+			player:SetMana(math.min(player:GetMana() + amount, player:GetMaxMana()), true)
 			self:SetMana(self:GetMana() - amount)
 
 			self:PlayDrainSound()
@@ -111,7 +93,7 @@ end
 
 function ENT:PlayDrainSound()
 	if CurTime() >= self.NextSound then
-		self.NextSound = CurTime() + 0.75
+		self.NextSound = CurTime() + 1.25
 		self:EmitSound("nox/managain.ogg")
 	end
 end
