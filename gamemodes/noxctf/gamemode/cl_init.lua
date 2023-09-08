@@ -21,6 +21,7 @@ include("cl_deathnotice.lua")
 include("cl_notice.lua")
 include("cl_noxious_localization.lua")
 include("cl_votemap.lua")
+include("cl_maplist.lua")
 
 include("vgui/dexroundedpanel.lua")
 include("vgui/dexroundedframe.lua")
@@ -34,6 +35,7 @@ include("vgui/pclasses.lua")
 include("vgui/phelp.lua")
 include("vgui/poptions.lua")
 include("vgui/pteamselect.lua")
+include("vgui/votemapmenu.lua")
 
 include("nox_shared_spelldefines.lua")
 

@@ -1,3 +1,12 @@
+function OpenVoteMenu()
+	-- if not GAMEMODE.MapList then return end
+	local window = vgui.Create("RTPVoteMapMenu")
+    window:SetSize(800, 600)
+    window:Center()
+    window:SetVisible(true)
+	window:MakePopup()
+end
+
 local numgtvotes = {}
 
 function GetMostGTVotes()

@@ -36,6 +36,7 @@ GM.FlagEntity = "flag"
 GM.DisabledSpells = {}
 GM.DisabledClasses = {}
 GM.TeamBased = true
+GM.MapList = {}
 
 function GetSWEPClassName(foldername)
 	return string.match(foldername, ".-[/\\](.+)")

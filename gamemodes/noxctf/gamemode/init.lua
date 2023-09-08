@@ -23,6 +23,7 @@ AddCSLuaFile("cl_targetid.lua")
 AddCSLuaFile("cl_notice.lua")
 AddCSLuaFile("cl_dermaskin.lua")
 AddCSLuaFile("cl_votemap.lua")
+AddCSLuaFile("cl_maplist.lua")
 
 AddCSLuaFile("sv_obj_player_extend.lua")
 AddCSLuaFile("sv_globals.lua")
@@ -43,6 +44,7 @@ AddCSLuaFile("vgui/scoreboard.lua")
 AddCSLuaFile("vgui/vehiclepad.lua")
 AddCSLuaFile("vgui/poptions.lua")
 AddCSLuaFile("vgui/pteamselect.lua")
+AddCSLuaFile("vgui/votemapmenu.lua")
 
 AddCSLuaFile("nox_votemap.lua")
 AddCSLuaFile("nox_teams.lua")
@@ -96,6 +98,7 @@ include("shared.lua")
 include("sv_globals.lua")
 include("sv_obj_player_extend.lua")
 
+include("nox_maplist.lua")
 include("nox_votemap.lua")
 include("nox_spelldefines.lua")
 include("nox_shared_spelldefines.lua")
@@ -161,208 +164,9 @@ function GM:Initialize()
 	game.ConsoleCommand("sv_gravity 600\n")
 	game.ConsoleCommand("sv_kickerrornum 0\n")
 
-	self:AddResources()
 	self:ParseParticleManifests()
 	self:SetPropTypeNames()
 	self:SetUpCastableSpells()
-end
-
-function GM:AddResources()
-	resource.AddFile("resource/fonts/cambria.ttf")
-
-	resource.AddFile("materials/awesomestrike/simplecircle.vmt")
-
-	resource.AddFile("materials/refract_ring.vtf")
-	resource.AddFile("materials/refract_ring.vmt")
-	resource.AddFile("materials/vgui/health2.vtf")
-	resource.AddFile("materials/vgui/health2.vmt")
-	resource.AddFile("materials/vgui/mana2.vtf")
-	resource.AddFile("materials/vgui/mana2.vmt")
-
-	resource.AddFile("materials/noxctf/health_bar.vmt")
-	resource.AddFile("materials/noxctf/health_bar.vtf")
-	resource.AddFile("materials/noxctf/health_bar_back.vmt")
-	resource.AddFile("materials/noxctf/health_bar_back.vtf")
-	resource.AddFile("materials/noxctf/mana_bar.vmt")
-	resource.AddFile("materials/noxctf/mana_bar.vtf")
-	resource.AddFile("materials/noxctf/mana_bar_back.vmt")
-	resource.AddFile("materials/noxctf/mana_bar_back.vtf")
-	resource.AddFile("materials/noxctf/bar_background.vmt")
-	resource.AddFile("materials/noxctf/bar_background.vtf")
-
-	resource.AddFile("materials/noxctf/classselect_bar.vmt")
-	resource.AddFile("materials/noxctf/classselect_bar.vtf")
-	resource.AddFile("materials/noxctf/classselect_bar_back.vmt")
-	resource.AddFile("materials/noxctf/classselect_bar_back.vtf")
-	resource.AddFile("materials/noxctf/classselect_detail.vmt")
-	resource.AddFile("materials/noxctf/classselect_detail.vtf")
-	resource.AddFile("materials/noxctf/classselect_type.vmt")
-	resource.AddFile("materials/noxctf/classselect_type.vtf")
-
-	resource.AddFile("materials/noxctf/crosshair1.vmt")
-
-	resource.AddFile("models/weapons/v_pza.mdl")
-	resource.AddFile("models/weapons/w_spanner.mdl")
-	resource.AddFile("models/weapons/v_spanner/v_spanner.mdl")
-	resource.AddFile("sound/weapons/melee/wrench/wrench_hit-01.wav")
-	resource.AddFile("sound/weapons/melee/wrench/wrench_hit-02.wav")
-	resource.AddFile("sound/weapons/melee/wrench/wrench_hit-03.wav")
-	resource.AddFile("sound/weapons/melee/wrench/wrench_hit-04.wav")
-	resource.AddFile("materials/models/weapons/wrench.vmt")
-	resource.AddFile("materials/models/weapons/wrench.vtf")
-	resource.AddFile("materials/models/weapons/wrench_nm.vtf")
-	resource.AddFile("materials/models/weapons/temptexture/handsmesh1.vmt")
-	resource.AddFile("materials/models/weapons/temptexture/handsmesh1.vtf")
-
-	resource.AddFile("materials/noxctf/sprite_nova.vtf")
-	resource.AddFile("materials/noxctf/sprite_nova.vmt")
-	resource.AddFile("materials/noxctf/sprite_smoke.vtf")
-	resource.AddFile("materials/noxctf/sprite_smoke.vmt")
-
-	resource.AddFile("materials/noxctf/sprite_bloodspray1.vmt")
-	resource.AddFile("materials/noxctf/sprite_bloodspray2.vmt")
-	resource.AddFile("materials/noxctf/sprite_bloodspray3.vmt")
-	resource.AddFile("materials/noxctf/sprite_bloodspray4.vmt")
-	resource.AddFile("materials/noxctf/sprite_bloodspray5.vmt")
-	resource.AddFile("materials/noxctf/sprite_bloodspray6.vmt")
-	resource.AddFile("materials/noxctf/sprite_bloodspray7.vmt")
-	resource.AddFile("materials/noxctf/sprite_bloodspray8.vmt")
-
-	for _, filename in pairs(file.Find("materials/noxctf/classicons/*.vmt", "GAME")) do
-		resource.AddFile("materials/noxctf/classicons/"..filename)
-	end
-	for _, filename in pairs(file.Find("materials/noxctf/classicons/*.vtf", "GAME")) do
-		resource.AddFile("materials/noxctf/classicons/"..filename)
-	end
-	for _, filename in pairs(file.Find("materials/spellicons/*.png", "GAME")) do
-		resource.AddFile("materials/spellicons/"..filename)
-	end
-	for _, filename in pairs(file.Find("sound/nox/*.ogg", "GAME")) do
-		resource.AddFile("sound/nox/"..filename)
-	end
-	for _, filename in pairs(file.Find("materials/mixerman3d/weapons/*.*", "GAME")) do
-		resource.AddFile("materials/mixerman3d/weapons/"..filename)
-	end
-	for _, filename in pairs(file.Find("models/mixerman3d/weapons/*.*", "GAME")) do
-		resource.AddFile("models/mixerman3d/weapons/"..filename)
-	end
-	for _, filename in pairs(file.Find("models/peanut/*.*", "GAME")) do
-		resource.AddFile("models/peanut/"..filename)
-	end
-	for _, filename in pairs(file.Find("materials/peanut/*.*", "GAME")) do
-		resource.AddFile("materials/peanut/"..filename)
-	end
-	for _, filename in pairs(file.Find("models/katharsmodels/flags/*.*", "GAME")) do
-		resource.AddFile("models/katharsmodels/flags/"..filename)
-	end
-	for _, filename in pairs(file.Find("materials/katharsmodels/flags/*.*", "GAME")) do
-		resource.AddFile("materials/katharsmodels/flags/"..filename)
-	end
-	for _, filename in pairs(file.Find("materials/models/npc_player/*.*", "GAME")) do
-		resource.AddFile("materials/models/npc_player/"..filename)
-	end
-
-	resource.AddFile("materials/noxctf/flagicon_home.vmt")
-	resource.AddFile("materials/noxctf/flagicon_home.vtf")
-	resource.AddFile("materials/noxctf/flagicon_field.vmt")
-	resource.AddFile("materials/noxctf/flagicon_field.vtf")
-	resource.AddFile("materials/noxctf/flagicon_dropped.vmt")
-	resource.AddFile("materials/noxctf/flagicon_dropped.vtf")
-
-	resource.AddFile("materials/killicon/axe.vmt")
-	resource.AddFile("materials/killicon/axe.vtf")
-	resource.AddFile("models/nox_longbow_v2.mdl")
-	resource.AddFile("models/w_nox_longbow.mdl")
-	resource.AddFile("models/nox_sword_short_v001.mdl")
-	resource.AddFile("models/w_nox_short_sword.mdl")
-
-	resource.AddFile("models/morrowind/daedric/staff/v_daedric_staff.mdl")
-	resource.AddFile("models/morrowind/daedric/staff/w_daedric_staff.mdl")
-	resource.AddFile("models/morrowind/magnus/staff/v_magnus_staff.mdl")
-	resource.AddFile("models/morrowind/magnus/staff/w_magnus_staff.mdl")
-
-	resource.AddFile("materials/morrowind/daedric/staff/daedric1.vmt")
-	resource.AddFile("materials/morrowind/daedric/staff/daedric2.vmt")
-	resource.AddFile("materials/morrowind/daedric/staff/daedric3.vmt")
-	resource.AddFile("materials/morrowind/daedric/staff/daedric4.vmt")
-	resource.AddFile("materials/morrowind/daedric/staff/daedric5.vmt")
-
-	resource.AddFile("materials/morrowind/magnus/staff/magnus1.vmt")
-	resource.AddFile("materials/morrowind/magnus/staff/magnus2.vmt")
-	resource.AddFile("materials/morrowind/magnus/staff/magnus3.vmt")
-	resource.AddFile("materials/morrowind/magnus/staff/magnus4.vmt")
-	resource.AddFile("materials/morrowind/magnus/staff/magnus5.vmt")
-
-	resource.AddFile("materials/models/wp_sword_short/wp_sword_short.vmt")
-	resource.AddFile("materials/models/wp_sword_short/wp_sword_short.vtf")
-	resource.AddFile("materials/models/wp_sword_short/wp_sword_short_normal.vtf")
-	resource.AddFile("materials/models/arrows/arrow.vmt")
-	resource.AddFile("materials/models/arrows/arrow.vtf")
-	resource.AddFile("materials/models/orcbow/ornesbow.vmt")
-	resource.AddFile("materials/models/orcbow/ornesbow.vtf")
-	resource.AddFile("materials/models/orcbow/ornesbow_normal.vtf")
-
-	-- Paladin's Warhammer
-	resource.AddFile("sound/weapons/hammer/morrowind_hammer_deploy1.wav")
-	resource.AddFile("sound/weapons/hammer/morrowind_hammer_hit.wav")
-	resource.AddFile("sound/weapons/hammer/morrowind_hammer_hitwall1.wav")
-	resource.AddFile("sound/weapons/hammer/morrowind_hammer_slash.wav")
-	resource.AddFile("sound/weapons/halberd/morrowind_halberd_deploy1.wav")
-	resource.AddFile("sound/weapons/halberd/morrowind_halberd_hit.wav")
-	resource.AddFile("sound/weapons/halberd/morrowind_halberd_hitwall1.wav")
-	resource.AddFile("sound/weapons/halberd/morrowind_halberd_slash.wav")
-
-	resource.AddFile("models/morrowind/orcish/hammer/v_orcish_hammer.mdl")
-	resource.AddFile("models/morrowind/orcish/hammer/w_orcish_hammer.mdl")
-
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish1.vmt")
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish1.vtf")
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish2.vmt")
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish2.vtf")
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish3.vmt")
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish3.vtf")
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish4.vmt")
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish4.vtf")
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish5.vmt")
-	resource.AddFile("materials/morrowind/orcish/hammer/orcish5.vtf")
-	resource.AddFile("materials/vgui/entities/weapon_mor_orcish_hammer.vmt")
-	resource.AddFile("materials/vgui/entities/weapon_mor_orcish_hammer.vtf")
-
-	--[[
-	-- Alchemist's Scepter
-	resource.AddFile("models/morrowind/dwemer/mace/v_dwemer_mace.mdl")
-	resource.AddFile("models/morrowind/dwemer/mace/w_dwemer_mace.mdl")
-
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer1.vmt")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer1.vtf")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer2.vmt")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer2.vtf")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer3.vmt")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer3.vtf")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer4.vmt")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer4.vtf")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer5.vmt")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer5.vtf")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer6.vmt")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer6.vtf")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer7.vmt")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer7.vtf")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer8.vmt")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer8.vtf")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer9.vmt")
-	resource.AddFile("materials/morrowind/dwemer/mace/dwemer9.vtf")
-
-	resource.AddFile("materials/vgui/entities/weapon_mor_dwemer_mace.vmt")
-	resource.AddFile("materials/vgui/entities/weapon_mor_dwemer_mace.vtf")
-	--]]
-	resource.AddFile("particles/nox.pcf")
-	resource.AddFile("particles/noxa.pcf")
-	resource.AddFile("particles/zolt.pcf")
-
-	resource.AddFile("models/props_noxious/fist/fist_of_vengeance.mdl")
-	resource.AddFile("materials/models/props_noxious/fist/color.vtf")
-	resource.AddFile("materials/models/props_noxious/fist/color.vmt")
-
 end
 
 function GM:CreateDummyEntities()
@@ -1827,6 +1631,9 @@ end)]]
 
 local function DelayFeed(self, pl)
 	if pl:IsValid() then
+		for _, mapinfo in ipairs(GAMEMODE.MapList) do
+			pl:SendLua("AddMap([["..util.TableToJSON(mapinfo).."]])")
+		end
 		pl:SendLua("InitTeams({"..table.concat(TEAMS_PLAYING, ",").."}) OVERTIME="..tostring(OVERTIME).." "..(pl:Team() == TEAM_SPECTATOR and "MakepTeamSelect()" or "MakepClasses()"))
 		if self.FlagEntity then
 			for i in pairs(team.GetAllTeams()) do
