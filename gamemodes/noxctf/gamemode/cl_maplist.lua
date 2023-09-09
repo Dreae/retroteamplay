@@ -1,3 +1,4 @@
-function AddMap(mapinfo)
-    table.insert(GAMEMODE.MapList, util.JSONToTable(mapinfo))
-end
+net.Receive("RTP_MapList", function()
+    local json = net.ReadString()
+    GAMEMODE.MapList = util.JSONToTable(json)
+end)

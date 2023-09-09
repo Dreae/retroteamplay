@@ -14,6 +14,7 @@ AddCSLuaFile("sh_animations.lua")
 AddCSLuaFile("sh_voicesets.lua")
 AddCSLuaFile("sh_colors.lua")
 AddCSLuaFile("sh_luaanimations.lua")
+AddCSLuaFile("sh_obj_player_extend.lua")
 
 AddCSLuaFile("cl_init.lua")
 AddCSLuaFile("cl_deathnotice.lua")
@@ -25,11 +26,7 @@ AddCSLuaFile("cl_dermaskin.lua")
 AddCSLuaFile("cl_votemap.lua")
 AddCSLuaFile("cl_maplist.lua")
 
-AddCSLuaFile("sv_obj_player_extend.lua")
-AddCSLuaFile("sv_globals.lua")
-
 AddCSLuaFile("obj_entity_extend.lua")
-AddCSLuaFile("obj_player_extend.lua")
 
 AddCSLuaFile("vgui/dexroundedpanel.lua")
 AddCSLuaFile("vgui/dexroundedframe.lua")
@@ -45,8 +42,8 @@ AddCSLuaFile("vgui/vehiclepad.lua")
 AddCSLuaFile("vgui/poptions.lua")
 AddCSLuaFile("vgui/pteamselect.lua")
 AddCSLuaFile("vgui/votemapmenu.lua")
+AddCSLuaFile("vgui/votemapbutton.lua")
 
-AddCSLuaFile("nox_votemap.lua")
 AddCSLuaFile("nox_teams.lua")
 AddCSLuaFile("nox_shared_spelldefines.lua")
 
@@ -96,10 +93,11 @@ include("modules/animationsapi/boneanimlib.lua")
 include("shared.lua")
 
 include("sv_globals.lua")
-include("sv_obj_player_extend.lua")
+include("sh_obj_player_extend.lua")
+include("obj_player_extend.lua")
 
-include("nox_maplist.lua")
-include("nox_votemap.lua")
+include("maplist.lua")
+include("votemap.lua")
 include("nox_spelldefines.lua")
 include("nox_shared_spelldefines.lua")
 
@@ -1133,7 +1131,7 @@ function GM:EndGame(winner, slaves)
 		local steamid = pl:SteamID()
 		if pl:Team() == winner then
 			if slaves[steamid] then
-				pl:PrintMessage(HUD_PRINTTALK, "Being taken in as a slave, you and your old team members has lost this round.")
+				pl:PrintMessage(HUD_PRINTTALK, "Being taken in as a slave, you and your old team members have lost this round.")
 			else
 				pl:PrintMessage(HUD_PRINTTALK, "You and your team members have won this round.")
 			end
@@ -1631,9 +1629,7 @@ end)]]
 
 local function DelayFeed(self, pl)
 	if pl:IsValid() then
-		for _, mapinfo in ipairs(GAMEMODE.MapList) do
-			pl:SendLua("AddMap([["..util.TableToJSON(mapinfo).."]])")
-		end
+		SendMapList(pl)
 		pl:SendLua("InitTeams({"..table.concat(TEAMS_PLAYING, ",").."}) OVERTIME="..tostring(OVERTIME).." "..(pl:Team() == TEAM_SPECTATOR and "MakepTeamSelect()" or "MakepClasses()"))
 		if self.FlagEntity then
 			for i in pairs(team.GetAllTeams()) do

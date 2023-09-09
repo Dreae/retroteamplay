@@ -1,3 +1,10 @@
+util.AddNetworkString("RTP_MapList")
+function SendMapList(pl)
+	net.Start("RTP_MapList")
+		net.WriteString(util.TableToJSON(GAMEMODE.MapList))
+	net.Send(pl)
+end
+
 do
 	local maps = file.Find( "maps/*.bsp", "GAME" )
 	for _, map in ipairs(maps) do
@@ -7,13 +14,13 @@ do
 			"png"
 		}
 		local map_name = map:sub( 1, -5 ):lower()
-		local thumb = "asset://garrysmod/rtp_revival/nothumb.png"
+		local thumb = "vgui/avatar_default.vmt"
 		for _, ext in ipairs(thumb_exts) do
 			if file.Exists("maps/"..map_name.."."..ext, "GAME") then
-				thumb = "asset://garrysmod/maps/"..map_name.."."..ext
+				thumb = "maps/"..map_name.."."..ext
 				break
 			elseif file.Exists("maps/thumb/"..map_name.."."..ext, "GAME") then
-				thumb = "asset://garrysmod/maps/thumb/"..map_name.."."..ext
+				thumb = "maps/thumb/"..map_name.."."..ext
 				break
 			end
 		end

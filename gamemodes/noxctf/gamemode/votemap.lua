@@ -1,3 +1,50 @@
+GM.MapVotes = {}
+local player_voted_for = {}
+
+local function is_map_valid(mapname) 
+	for _, maptab in ipairs(GAMEMODE.MapList) do
+		if maptab.name == mapname then return true end
+	end
+
+	return false
+end
+
+util.AddNetworkString("RTP_PlayerVoted")
+concommand.Add("votemap_vote", function(sender, command, arguments)
+	if not sender:IsValid() then return end
+
+	-- TODO: Uncomment this
+	-- if not VOTEMAPOVER or VOTEMAPOVER <= CurTime() then
+	-- 	sender:PrintMessage(HUD_PRINTTALK, "Map voting time has ended!")
+	-- 	return
+	-- end
+
+	local mapname = arguments[1]
+	if not is_map_valid(mapname) then
+		sender:PrintMessage(HUD_PRINTTALK, "Invalid map")
+		return
+	end
+
+	local steamid = sender:SteamID64()
+	if player_voted_for[steamid] then
+		local previous_vote = player_voted_for[steamid]
+		local previous_total = GAMEMODE.MapVotes[previous_vote] or 1
+		GAMEMODE.MapVotes[previous_vote] = previous_total - 1
+	end
+
+	player_voted_for[steamid] = mapname
+
+	if GAMEMODE.MapVotes[mapname] == nil then
+		GAMEMODE.MapVotes[mapname] = 0
+	end
+	GAMEMODE.MapVotes[mapname] = GAMEMODE.MapVotes[mapname] + 1
+
+	net.Start("RTP_PlayerVoted")
+		net.WriteEntity(sender)
+		net.WriteString(mapname)
+	net.Broadcast()
+end)
+
 hook.Add("Initialize", "GameTypeVotingInitialize", function()
 	hook.Remove("Initialize", "GameTypeVotingInitialize")
 

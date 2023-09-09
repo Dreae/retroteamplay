@@ -1,318 +1,563 @@
 local meta = FindMetaTable("Player")
 if not meta then return end
 
-function meta:IsInvisible()
-	return self:GetVisibility() <= 0.4
+function meta:RemoveInvisibility()
+	if self.status_invisibility and self.status_invisibility:IsValid() then
+		self.status_invisibility:Remove()
+	end
 end
 
-function meta:IsVisibleTarget(watcher) -- DEPRECATED
-	return not self:IsInvisible()
+function meta:GiveInvisibility()
+	if self.status_invisibility and self.status_invisibility:IsValid() or self:IsCarrying() then return false end
+
+	self:GiveStatus("invisibility")
+
+	return true
 end
 
-function meta:GetVisibility()
-	local status = self:GetStatus("invisibility") or self:GetStatus("shadowstorm")
-	if status and status:IsValid() then
-		if CLIENT then
-			return status:GetVisibility(self)
+function meta:Think()
+	if CurTime() >= self.NextHealthRegen and CurTime() >= self.LastDamaged + 4 and self:Alive() and self:Health() < self:GetMaxHealth() and not self:IsCarrying() then
+		self.NextHealthRegen = CurTime() + 1
+		self:SetHealth(self:Health() + 1)
+	end
+end
+
+function meta:CustomGesture(gesture)
+	if not gesture then return end
+	--self:DoAnimationEvent(gesture)
+	self:AnimRestartGesture(GESTURE_SLOT_CUSTOM, gesture, true)
+	umsg.Start("cusges")
+		umsg.Entity(self)
+		umsg.Short(gesture)
+	umsg.End()
+end
+
+function meta:SendSound(snd)
+	self:SendLua("surface.PlaySound(\""..snd.."\")")
+end
+
+function meta:CenterPrint(message, color, lifetime)
+	self:SendLua(string.format("GAMEMODE:CenterPrint(%q,%s,%i)", message or "", color or "nil", lifetime or 5))
+end
+
+function meta:FixModelAngles(velocity)
+	local eye = self:EyeAngles()
+	self:SetLocalAngles(eye)
+	self:SetPoseParameter("move_yaw", math.NormalizeAngle(velocity:Angle().yaw - eye.y))
+end
+
+function meta:JoinBalancedTeam(override)
+	if not override then
+		local previd = GAMEMODE.TeamLocks[self:UniqueID()]
+		if previd and TEAMS_PLAYING[previd] ~= nil then
+			self:SetTeam(previd)
+			return
 		end
+	end
 
-		return 0
+	local target_team = team.BestAutoJoinTeam()
+	self:SetTeam(target_team)
+end
+
+function meta:TeamValue()
+	return math.max(   0.2, (self.CTFKills or 0) / math.max(self.CTFDeaths or 1, 1) + ((self.AssaultWins or 0) / math.max(1, self.AssaultLosses or 1)) * 2  )
+end
+
+function meta:Channeling(tim)
+	local status = self:GiveStatus("channeling", tim)
+	if IsValid(status) then
+		status:SetDieTime(CurTime() + tim)
+	end
+end
+
+function meta:GlobalCooldown(tim)
+	local status = self:GiveStatus("globalcooldown", tim)
+	if IsValid(status) then
+		status:SetDieTime(CurTime() + tim)
+	end
+end
+
+function meta:SoftFreeze(tim)
+	local status = self:GiveStatus("frozen", tim)
+	if IsValid(status) then
+		status:SetDieTime(CurTime() + tim)
+	end
+end
+
+function meta:Slow(tim, noeffect)
+	local status = self:GiveStatus(noeffect and "slow_noeffect" or "slow", tim)
+	if IsValid(status) then
+		status:SetDieTime(CurTime() + tim)
+	end
+end
+
+function meta:Stun(tim, force, noeffect)
+	if not force and self:GetPlayerClassTable().NoStun then
+		self:Slow(tim)
+		return
+	end
+
+	local status = self:GiveStatus(noeffect and "stun_noeffect" or "stun", tim)
+	if IsValid(status) then
+		status:SetDieTime(CurTime() + tim)
+	end
+end
+
+function meta:ManaStun(tim, force)
+	if force or 0 < self:GetManaRegeneration() then
+		local status = self:GiveStatus("manastun", tim)
+		if IsValid(status) then
+			status:SetColor(Color(tim, 255, 255, 255))
+			status:SetDieTime(CurTime() + tim)
+		end
+	end
+end
+
+local function nocollidetimer(self, timername)
+	for _, e in pairs(ents.FindInBox(self:WorldSpaceAABB())) do
+		if e:IsPlayer() and e ~= self and GAMEMODE:ShouldCollide(self, e) then
+			return
+		end
+	end
+
+	self:SetCollisionGroup(COLLISION_GROUP_PLAYER)
+	timer.Destroy(timername)
+end
+
+function meta:TemporaryNoCollide()
+	if self:GetCollisionGroup() ~= COLLISION_GROUP_PLAYER then return end
+
+	for _, e in pairs(ents.FindInBox(self:WorldSpaceAABB())) do
+		if e:IsPlayer() and e ~= self and GAMEMODE:ShouldCollide(self, e) then
+			self:SetCollisionGroup(COLLISION_GROUP_DEBRIS_TRIGGER)
+
+			local timername = "TemporaryNoCollide"..self:UniqueID()
+			timer.Create(timername, 0, 0, function() nocollidetimer(self, timername) end)
+
+			return
+		end
+	end
+end
+
+if not meta.OldDrawViewModel then
+	meta.OldDrawViewModel = meta.DrawViewModel
+	meta.OldDrawWorldModel = meta.DrawWorldModel
+
+	local function OldDrawViewModel(self, bDraw)
+		if self:IsValid() then
+			self:OldDrawViewModel(bDraw)
+		end
+	end
+
+	function meta:DrawViewModel(bDraw)
+		self.m_DrawViewModel = bDraw
+		timer.Simple(0, function() OldDrawViewModel(self, bDraw) end)
+	end
+
+	local function OldDrawWorldModel(self, bDraw)
+		if self:IsValid() then
+			self:OldDrawWorldModel(bDraw)
+		end
+	end
+
+	function meta:DrawWorldModel(bDraw)
+		self.m_DrawWorldModel = bDraw
+		timer.Simple(0, function() OldDrawWorldModel(self, bDraw) end)
+	end
+
+	function meta:GetDrawViewModel()
+		return self.m_DrawViewModel
+	end
+
+	function meta:GetDrawWorldModel()
+		return self.m_DrawWorldModel
+	end
+end
+
+function meta:TriggerAegis(from)
+	local ent = self.status_aegis
+	if ent and ent:IsValid() and ent:GetCounter() > 0 then
+		ent:SetCounter(ent:GetCounter() - 1)
+		ent:CreateSpike(from and from:IsValid() and self:NearestPoint(from:LocalToWorld(from:OBBCenter())) or self:LocalToWorld(self:OBBCenter()))
+		return true
+	end
+
+	return false
+end
+
+function meta:IsFrozen()
+	return self.m_IsFrozen
+end
+
+
+if not meta.OldFreeze then 
+	meta.OldFreeze = meta.Freeze
+	function meta:Freeze(bFreeze)
+		self.m_IsFrozen = bFreeze
+		self:OldFreeze(bFreeze)
+	end
+end
+
+function meta:SetTeamID(iTeam)
+	self:SetTeam(iTeam)
+end
+
+function meta:LMR(int, args)
+	umsg.Start("lmr", self)
+		umsg.Short(int)
+		umsg.String(args or "")
+	umsg.End()
+end
+
+function meta:LMG(int, args)
+	umsg.Start("lmg", self)
+		umsg.Short(int)
+		umsg.String(args or "")
+	umsg.End()
+end
+
+function meta:LM(int, args)
+	umsg.Start("lm", self)
+		umsg.Short(int)
+		umsg.String(args or "")
+	umsg.End()
+end
+
+function meta:SendLocalPlayerSpawn()
+	umsg.Start("sp", self)
+		umsg.Short(self:GetPlayerClass())
+	umsg.End()
+end
+
+function meta:SetLastAttacker(attacker)
+	if attacker ~= self.LastAttacker then
+		self.LastAttacker2 = self.LastAttacker
+		self.LastAttacked2 = self.LastAttacked
+	end
+	if attacker ~= self then
+		self.LastAttacker = attacker
+		self.LastAttacked = CurTime()
+	end
+end
+
+function meta:GetLastAttacker()
+	return self.LastAttacker, self.LastAttacked, self.LastAttacker2, self.LastAttacked2
+end
+
+function meta:ClearLastAttacker()
+	self.LastAttacker = NULL
+	self.LastAttacked = 0
+	self.LastAttacker2 = NULL
+	self.LastAttacked2 = 0
+end
+
+function meta:RemoveAllStatus(bSilent, bInstant, sHostile)
+	if bInstant then
+		for _, ent in pairs(ents.FindByClass("status_*")) do
+			if not ent.NoRemoveOnDeath and ent:GetOwner() == self then
+				if sHostile and ent.Hostile then
+					ent:Remove()
+				elseif not sHostile then
+					ent:Remove()
+				end
+			end
+		end
+	else
+		for _, ent in pairs(ents.FindByClass("status_*")) do
+			if not ent.NoRemoveOnDeath and ent:GetOwner() == self then
+				if sHostile and ent.Hostile then
+					ent.SilentRemove = bSilent
+					ent:SetDieTime(1)
+				elseif not sHostile then
+					ent.SilentRemove = bSilent
+					ent:SetDieTime(1)
+				end
+			end
+		end
+	end
+end
+
+function meta:RemoveStatus(sType, bSilent, bInstant, sExclude)
+	local removed = false
+
+	for _, ent in pairs(ents.FindByClass("status_"..sType)) do
+		if ent:GetOwner() == self and not (sExclude and string.sub(ent:GetClass(), 1, #("status_"..sExclude)) == "status_"..sExclude) then
+			if bInstant then
+				ent:Remove()
+			else
+				ent.SilentRemove = bSilent
+				ent:SetDieTime(1)
+			end
+			removed = true
+		end
+	end
+
+	return removed
+end
+
+function meta:GetStatus(sType)
+	local ent = self["status_"..sType]
+	if ent and ent:IsValid() and ent.Owner == self then
+		return ent
+	else
+		return false
+	end
+end
+
+function meta:GetAllStatuses(onlyHostile)
+	local statuses = {}
+	
+	for _, ent in pairs(ents.FindByClass("status_*")) do
+		if not ent.NoRemoveOnDeath and ent:GetOwner() == self then
+			if onlyHostile then
+				if ent.Hostile then table.insert(statuses, ent) end
+			else
+				table.insert(statuses, ent)
+			end
+		
+		end
+	end
+	
+	return statuses
+end
+
+function meta:GiveStatus(sType, fDie)
+	local cur = self:GetStatus(sType)
+	if cur then
+		if fDie then
+			cur:SetDieTime(CurTime() + fDie)
+		end
+		cur:SetPlayer(self, true)
+		return cur
+	else
+		local ent = ents.Create("status_"..sType)
+		if self:StatusWeaponHook("StatusImmunity", ent) then
+			ent:Remove()
+			return
+		end
+		if ent:IsValid() then
+			ent:Spawn()
+			if fDie then
+				ent:SetDieTime(CurTime() + fDie)
+			end
+			ent:SetPlayer(self)
+			return ent
+		end
+	end
+end
+
+function meta:TeamWeight()
+	if NDB then
+		return math.min(8000, (self.CTFKills / math.max(1, self.CTFDeaths)) * self.CTFKills + (self.AssaultWins / math.max(1, self.AssaultLosses)) * self.AssaultWins * 50 + self.AssaultDefense + self.AssaultOffense) * 0.5
 	end
 
 	return 1
 end
 
-if CLIENT then
-	function meta:CustomGesture(gesture)
-		--self:DoAnimationEvent(gesture)
-		self:AnimRestartGesture(GESTURE_SLOT_CUSTOM, gesture, true)
-	end
-	usermessage.Hook("cusges", function(um)
-		local ent = um:ReadEntity()
-		local gesture = um:ReadShort()
-		if ent:IsValid() then
-			ent:CustomGesture(gesture)
-		end
-	end)
-
-	function meta:FixModelAngles(velocity)
-		local eye = self:EyeAngles()
-		self:SetLocalAngles(eye)
-		self:SetRenderAngles(eye)
-		self:SetPoseParameter("move_yaw", math.NormalizeAngle(velocity:Angle().yaw - eye.y))
-	end
-
-	function meta:CenterPrint(message, color, lifetime)
-		GAMEMODE:CenterPrint(message, color, lifetime)
-	end
+function meta:IsPoisoned()
+	return timer.Exists(self:UniqueID().."Poisoned")
 end
 
-function meta:StopIfOnGround()
-	if self:OnGround() then
-		self:SetLocalVelocity(Vector(0, 0, 0))
-	end
+function meta:Poison(ticks, delay, override)
+	if not self:Alive() or self:IsPoisoned() and not override or self.ProtectFromPoison or self:GetPlayerClassTable().PoisonImmune then return end
+
+	ticks = ticks or 8
+	delay = delay or 2
+
+	self.PoisonCount = math.max(ticks, self.PoisonCount or 0)
+	local timername = self:UniqueID().."Poisoned"
+	timer.Create(timername, delay, 0, function() DoPoison(self, timername) end)
+
+	self:EmitSound("nox/poisonon.ogg")
+
+	self:DI(NameToSpell.Poison, ticks * delay)
+end
+GM:AddLifeStatusTimer("Poisoned")
+
+function meta:CurePoison()
+	self:DI(NameToSpell.Poison, 0)
+	self:EmitSound("nox/heal.ogg")
+
+	if self:GetStatus("venom") then self:RemoveStatus("venom") end
+	timer.Destroy(self:UniqueID().."Poisoned")
 end
 
-function meta:TraceHull(distance, mask, radius)
-	local vradius = Vector(radius, radius, radius)
-	local start = self:EyePos()
-	local filter = ents.FindByClass("projectile_*")
-	filter[#filter + 1] = self
-	return util.TraceHull({start = start, endpos = start + self:GetAimVector() * distance, filter = filter, mask = mask, mins = vradius * -1, maxs = vradius})
-end
-
-function meta:CallClassFunction(funcname, ...)
-	local tab = self:GetClassTable()
-	if tab[funcname] then
-		return tab[funcname](tab, self, ...)
-	end
-end
-
-function meta:SetPlayerClass(classid)
-	self:SetDTInt(3, classid)
-end
-
-function meta:GetPlayerClass()
-	return self:GetDTInt(3)
-end
-
-function meta:GetPlayerClassTable()
-	return CLASSES[self:GetPlayerClass()]
-end
-meta.GetClassTable = meta.GetPlayerClassTable
-
-function meta:CanTakeFlag(flag)
-	local ret = self:StatusWeaponHook("CanTakeFlag", flag)
-	if ret == false then return false end
-
-	return self:Alive() and not self:InVehicle() and CurTime() >= self.LastDeath + 1 and CurTime() >= (self.NextFlagPickup or 0)
-end
-
-function meta:GetTeamName()
-	return team.GetName(self:Team()) or "None"
-end
-
-function meta:GetAttackFilter()
-	return team.GetPlayers(self:GetTeamID())
-end
-
-function meta:IsFacing(ent)
-	local pos = ent:GetPos()
-	local shootpos = self:GetShootPos()
-
-	return pos:Distance(shootpos + self:GetAimVector() * 8) < pos:Distance(shootpos)
-end
-
-function meta:IsPointingAt(ent)
-	return self:GetEyeTrace().Entity == ent
-end
-
-function meta:TraceLine(distance, _mask)
-	local vStart = self:GetShootPos()
-	local filt = ents.FindByClass("projectile_*")
-	table.insert(filt, self)
-	return util.TraceLine({start = vStart, endpos = vStart + self:GetAimVector() * distance, filter = filt, mask = _mask})
-end
-
-function meta:ConvertNet()
-	return ConvertNet(self:SteamID())
-end
-
-function meta:AddFrozenPhysicsObject(ent, phys)
-end
-
-function meta:UnfreezePhysicsObjects(ent, phys)
-	return 0
-end
-
-function meta:GetMana()
-	return math.min(self:GetMaxMana(), self.Mana + self:GetManaRegeneration() * (CurTime() - self.ManaBase))
-end
-
-function meta:GetMaxMana()
-	return self:GetClassTable().Mana
-end
-
-function meta:GetManaRegeneration()
-	return self:GetClassTable().ManaRegeneration
-end
-
-function meta:SetMana(mana, send)
-	local ct = CurTime()
-
-	self.Mana = math.Clamp(mana, 0, self:GetMaxMana())
-	self.ManaBase = ct
-
-	if send and SERVER then
-		umsg.Start("SLM", self)
-			umsg.Float(mana)
-			umsg.Float(ct)
-		umsg.End()
-	end
-end
-
-meta.GetTeamID = meta.Team
-
-if CLIENT then
-	function meta:GetMaxHealth()
-		return self:GetPlayerClassTable().Health
-	end
-
-	function meta:DI(spellid, tTime)
-		if tTime == 0 then
-			DelayIcons[spellid] = nil
-		elseif tTime > 0 then
-			local curtime = CurTime()
-			DelayIcons[spellid] = {StartTime = curtime, EndTime = curtime + tTime}
-		else
-			DelayIcons[spellid] = {StartTime = CurTime(), EndTime = -10}
-		end
-	end
-
-	function meta:GetStatus(sType)
-		for _, ent in pairs(ents.FindByClass("status_"..sType)) do
-			if ent:GetOwner() == self then return ent end
-		end
-	end
-end
-
-function meta:GetCastableSpells()
-	return self:GetPlayerClassTable().CastableSpells
-end
-
-function meta:NumCastableSpells()
-	if not self:GetCastableSpells() then return NULL end
-	return #self:GetCastableSpells()
-end
-
-function meta:CanTeleport()
-	local ret = self:StatusWeaponHook("CanTeleport")
-	if ret ~= nil then return ret end
-
-	return true
-end
-
-function meta:IsAnchored()
-	return self:GetStatus("anchor")
-end
-
-local oldalive = meta.Alive
-function meta:Alive()
-	return self:GetMoveType() ~= MOVETYPE_OBSERVER and self:Team() ~= TEAM_SPECTATOR and oldalive(self)
-end
-
--- Override these because they're different in 1st person and on the server.
-function meta:SyncAngles()
-	local ang = self:EyeAngles()
-	ang.pitch = 0
-	ang.roll = 0
-	return ang
-end
-meta.GetAngles = meta.SyncAngles
-
-function meta:GetForward()
-	return self:SyncAngles():Forward()
-end
-
-function meta:GetUp()
-	return self:SyncAngles():Up()
-end
-
-function meta:GetRight()
-	return self:SyncAngles():Right()
-end
-
-function meta:TraceSphere(distance, radius)
-	local start = self:EyePos()
-	local filter = ents.FindByClass("projectile_*")
-	filter[#filter + 1] = self
-	local trace = util.TraceLine({start = start, endpos = start + self:GetAimVector() * distance, filter = filter})
-	local players = {}
+function meta:ProcessDamage(attacker, inflictor, dmginfo)
+	if not GAMEMODE:PlayerShouldTakeDamage(self, attacker) then dmginfo:SetDamage(0) return end
 	
-	for _, v in pairs(ents.GetAll()) do 
-		if v:GetPos():Distance(trace.HitPos) < radius then
-			table.insert(players, v)
-		end
+	if self:IsPlayer() and self:InVehicle() then
+		dmginfo:ScaleDamage(0.6666)
 	end
 
-	return players
-end
+	self:StatusWeaponHook("ProcessDamage", attacker, inflictor, dmginfo)
 
-function meta:GetTraceFilter()
-	return team.GetPlayers(self:GetTeamID())
-end
-
-function meta:GetMeleeTargets(range, size, addfilter)
-	local traces = {}
-
-	local filter = self:GetTraceFilter()
-	if addfilter then
-		table.Add(filter, addfilter)
-	end
-
-	local start = self:GetShootPos()
-	local trace = {start = start, endpos = start + self:GetAimVector() * range, mins = Vector(size, size, size) * -1, maxs = Vector(size, size, size), filter = filter, mask = MASK_SOLID}
-
-	for i=1, 50 do
-		local tr = util.TraceHull(trace)
-		local ent = tr.Entity
-		if ent:IsValid() then
-			if ent:IsBuilding() then
-				table.insert(traces, tr)
-				break
-			elseif not ent:IsProjectile() then -- We don't care about these entities.
-				table.insert(traces, tr)
-				table.insert(trace.filter, ent)
+	if attacker:IsPlayer() and attacker ~= self then
+		if attacker:GetStatus("vampirism") then
+			attacker:SetHealth(math.min(attacker:GetMaxHealth(), attacker:Health() + dmginfo:GetDamage() * 0.5))
+			if 14 < dmginfo:GetDamage() then
+				attacker:EmitSound("npc/waste_scanner/grenade_fire.wav", 80, 120)
 			end
-		elseif ent:IsWorld() then
-			table.insert(traces, tr) -- We hit the world. No more targets.
-			break
+			local effectdata = EffectData()
+				effectdata:SetOrigin(self:GetPos())
+				effectdata:SetStart(attacker:GetPos())
+			util.Effect("greaterheal", effectdata)
 		end
-	end
-
-	for i=1, 50 do
-		local tr = util.TraceLine(trace)
-		local ent = tr.Entity
-		if ent:IsValid() then
-			if ent:IsBuilding() then
-				table.insert(traces, tr)
-				break
-			elseif not ent:IsProjectile() then
-				table.insert(traces, tr)
-				table.insert(trace.filter, ent)
+		
+		if attacker:GetStatus("spellsaber_sanguineblade") and attacker:GetMana() >= 25 then
+			if inflictor:GetClass() == "weapon_melee_spellsaber" or inflictor:GetClass() == "projectile_swordthrow" then
+				attacker:GetWeapon("weapon_melee_spellsaber").VampPool = attacker:GetWeapon("weapon_melee_spellsaber").VampPool + dmginfo:GetDamage()
+				local effectdata = EffectData()
+					effectdata:SetOrigin(self:GetPos())
+					effectdata:SetStart(attacker:GetPos())
+				util.Effect("greaterheal", effectdata)
 			end
-		elseif ent:IsWorld() then
-			table.insert(traces, tr)
-			break
+		end
+		
+		if attacker:IsPlayer() and inflictor:GetClass() == "projectile_vampiricarrow" and attacker ~= self then
+			local damage = dmginfo:GetDamage()
+			
+			local effectdata = EffectData()
+				effectdata:SetOrigin(self:GetPos())
+				effectdata:SetStart(attacker:GetPos())
+			util.Effect("greaterheal", effectdata)
+
+			attacker:SetHealth(math.min(attacker:GetMaxHealth(), attacker:Health() + damage))
 		end
 	end
 
-	if DEBUG and SERVER then debugoverlay.Box(start + self:GetAimVector() * range, Vector(size, size, size), Vector(size, size, size), 1, COLOR_YELLOW) end
-	
-	return traces
+	self:StatusWeaponHook("PostProcessDamage", attacker, inflictor, dmginfo)
 end
 
-function meta:GetMeleeTargets2(range, size, addfilter)
-	local targets = {}
+function meta:DI(spellid, ttime)
+	umsg.Start("DI", self)
+		umsg.Short(spellid)
+		umsg.Float(ttime)
+	umsg.End()
+end
 
-	local filter = self:GetTraceFilter()
-	if addfilter then table.Add(filter, addfilter) end
+function meta:IsCarrying()
+	return self.Carrying
+end
 
-	local start = self:GetShootPos()
-	local pos = start + self:GetAimVector() * range
-	for _, ent in pairs(ents.FindInSphere(pos, size)) do
-		if ent:IsValid() and not table.HasValue(filter, ent) and ((ent:IsPlayer() and ent:Alive()) or (ent.PHealth or ent.ScriptVehicle or ent.VehicleParent or ent.CoreHealth or ent:GetClass() == "netherbomb")) and TrueVisible(start, ent:NearestPoint(start)) then
-			targets[ent] = ent:NearestPoint(start)
+function meta:ForceRespawn()
+	self:StripWeapons()
+
+	self.LastDeath = CurTime()
+	self:RemoveAllStatus(true, true)
+	self:Spawn()
+	self.SpawnTime = CurTime()
+end
+
+function meta:BloodSpray(pos, num, dir, force)
+	local effectdata = EffectData()
+		effectdata:SetOrigin(pos)
+		effectdata:SetMagnitude(num)
+		effectdata:SetRadius(self.BloodDye or 0)
+		effectdata:SetNormal(dir)
+		effectdata:SetScale(force)
+		effectdata:SetEntity(self)
+	util.Effect("bloodstream", effectdata, true, true)
+end
+
+function meta:Gib(dmginfo)
+	self.Gibbed = true
+	local effectdata = EffectData()
+		effectdata:SetEntity(self)
+		effectdata:SetOrigin(self:EyePos())
+		if dmginfo then
+			effectdata:SetScale(dmginfo:GetDamageType())
 		end
+		effectdata:SetRadius(self.BloodDye or 0)
+	util.Effect("gib_player", effectdata, true, true)
+end
+
+local OffenseAwards = {}
+OffenseAwards[30] = "Copper_Offense"
+OffenseAwards[60] = "Iron_Offense"
+OffenseAwards[100] = "Steel_Offense"
+OffenseAwards[150] = "Titanium_Offense"
+OffenseAwards[175] = "Diamond_Offense"
+OffenseAwards[250] = "Ultimate_Offense"
+
+function meta:AddOffense(amount)
+	local newdef = self.OffenseThisRound + amount
+	self.OffenseThisRound = newdef
+	if NDB then
+		self:AddPKV("AssaultOffense", amount)
 	end
 
-	if DEBUG and SERVER then debugoverlay.Sphere(pos, size, 2, COLOR_RED) end
+	--self:SetNetworkedString("tpstats", self.KillsThisRound.."@"..self.AssistsThisRound.."@"..self.OffenseThisRound.."@"..self.DefenseThisRound)
 
-	local tr = util.TraceLine({start = start, endpos = pos, mask = MASK_SOLID_BRUSHONLY})
+	if NDB then
+		for amount, award in pairs(OffenseAwards) do
+			if amount <= newdef then
+				if not self:HasAward(award) then
+					NDB.GiveAward(self, award)
+				end
+			end
+		end
+	end
+end
 
-	if tr.HitWorld then
-		return targets, tr
-	else
-		return targets, false
+local DefenseAwards = {}
+DefenseAwards[10] = "Copper_Defense"
+DefenseAwards[20] = "Iron_Defense"
+DefenseAwards[35] = "Steel_Defense"
+DefenseAwards[50] = "Titanium_Defense"
+DefenseAwards[75] = "Diamond_Defense"
+DefenseAwards[100] = "Ultimate_Defense"
+
+function meta:AddDefense(amount)
+	local newdef = self.DefenseThisRound + amount
+	self.DefenseThisRound = newdef
+	self:SetNetworkedString("tpstats", self.KillsThisRound.."@"..self.AssistsThisRound.."@"..self.OffenseThisRound.."@"..self.DefenseThisRound)
+
+	if NDB then
+		self:AddPKV("AssaultDefense", amount)
+		for amount, award in pairs(DefenseAwards) do
+			if amount <= newdef then
+				if not self:HasAward(award) then
+					NDB.GiveAward(self, award)
+				end
+			end
+		end
+	end
+end
+
+function meta:AddAssists(amount)
+	local newdef = self.AssistsThisRound + amount
+	self.AssistsThisRound = newdef
+	if NDB then
+		self:AddPKV("TeamPlayAssists", amount)
+	end
+
+	self:SetNetworkedString("tpstats", self.KillsThisRound.."@"..self.AssistsThisRound.."@"..self.OffenseThisRound.."@"..self.DefenseThisRound)
+end
+
+function meta:AddKills(amount)
+	local newdef = self.KillsThisRound + amount
+	self.KillsThisRound = newdef
+	if NDB then
+		self:AddPKV("CTFKills", amount)
+	end
+
+	self:SetNetworkedString("tpstats", self.KillsThisRound.."@"..self.AssistsThisRound.."@"..self.OffenseThisRound.."@"..self.DefenseThisRound)
+end
+
+--Necromancer stuff
+function meta:CreateSoul()
+	local s = ents.Create( "soul" )
+		s:SetPos( self:GetPos() + vector_up * 25 )
+		s:SetOwner( self )
+	s:Spawn()
+end
+
+function meta:FindNearbySoul( dist )
+	local mypos = self:LocalToWorld(self:OBBCenter())
+	for _, ent in pairs(ents.FindInSphere(mypos, dist or 325)) do
+		local nearest = ent:NearestPoint(mypos)
+		if IsValid(ent) and ent:GetClass() == "soul" then
+			return ent
+		end
 	end
 end

@@ -1,10 +1,24 @@
+local vote_map_window = NULL
+net.Receive("RTP_PlayerVoted", function(len)
+	if not vote_map_window or not vote_map_window:IsValid() then return end
+	
+	local ply = net.ReadEntity()
+	local mapname = net.ReadString()
+	if not ply:IsValid() or not ply:IsPlayer() then return end
+
+	vote_map_window:NewVote(ply, mapname)
+end)
+
 function OpenVoteMenu()
-	-- if not GAMEMODE.MapList then return end
-	local window = vgui.Create("RTPVoteMapMenu")
-    window:SetSize(800, 600)
-    window:Center()
-    window:SetVisible(true)
-	window:MakePopup()
+	if not GAMEMODE.MapList then return end
+	if vote_map_window and vote_map_window:IsValid() then
+		vote_map_window:Remove()
+	end
+
+	vote_map_window = vgui.Create("RTPVoteMapMenu")
+	vote_map_window:SetDeleteOnClose(true)
+    vote_map_window:SetVisible(true)
+	vote_map_window:MakePopup()
 end
 
 local numgtvotes = {}

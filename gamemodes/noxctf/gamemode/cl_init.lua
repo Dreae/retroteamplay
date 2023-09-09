@@ -35,6 +35,7 @@ include("vgui/pclasses.lua")
 include("vgui/phelp.lua")
 include("vgui/poptions.lua")
 include("vgui/pteamselect.lua")
+include("vgui/votemapbutton.lua")
 include("vgui/votemapmenu.lua")
 
 include("nox_shared_spelldefines.lua")

@@ -19,7 +19,6 @@ include("nixthelag.lua")
 include("nox_teams.lua")
 
 include("obj_entity_extend.lua")
-include("obj_player_extend.lua")
 
 include("sh_globals.lua")
 include("sh_props.lua")
@@ -28,6 +27,7 @@ include("sh_animations.lua")
 include("sh_voicesets.lua")
 include("sh_colors.lua")
 include("sh_luaanimations.lua")
+include("sh_obj_player_extend.lua")
 
 include("modules/sh_statushook.lua")
 
